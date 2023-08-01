@@ -67,7 +67,7 @@ var DefaultFields = concat(
 )
 
 var keyField = Field{
-	"name": "_key",
+	"name": "_docID",
 	"type": map[string]any{
 		"kind": "SCALAR",
 		"name": "ID",
@@ -192,7 +192,7 @@ type argDef struct {
 
 func buildOrderArg(objectName string, fields []argDef) Field {
 	inputFields := []any{
-		makeInputObject("_key", "Ordering", nil),
+		makeInputObject("_docID", "Ordering", nil),
 	}
 
 	for _, field := range fields {
@@ -217,7 +217,7 @@ func buildFilterArg(objectName string, fields []argDef) Field {
 			"kind": "INPUT_OBJECT",
 			"name": filterArgName,
 		}),
-		makeInputObject("_key", "IDOperatorBlock", nil),
+		makeInputObject("_docID", "IDOperatorBlock", nil),
 		makeInputObject("_not", filterArgName, nil),
 		makeInputObject("_or", nil, map[string]any{
 			"kind": "INPUT_OBJECT",
