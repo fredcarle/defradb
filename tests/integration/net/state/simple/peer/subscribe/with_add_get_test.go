@@ -53,13 +53,13 @@ func TestP2PSubscribeAddGetMultiple(t *testing.T) {
 			testUtils.RandomNetworkingConfig(),
 			testUtils.SchemaUpdate{
 				Schema: `
+					type Bears {
+						name: String
+					}
 					type Users {
 						name: String
 					}
 					type Giraffes {
-						name: String
-					}
-					type Bears {
 						name: String
 					}
 				`,
