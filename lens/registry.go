@@ -53,12 +53,6 @@ type lensRegistry struct {
 	// lens configurations by source schema version ID
 	configs    map[string]client.LensConfig
 	configLock sync.RWMutex
-
-	// Writable transaction contexts by transaction ID.
-	//
-	// Read-only transaction contexts are not tracked.
-	txnCtxs map[uint64]*txnContext
-	txnLock sync.RWMutex
 }
 
 // txnContext contains uncommitted transaction state tracked by the registry,
@@ -109,29 +103,16 @@ func NewRegistry(lensPoolSize immutable.Option[int], db TxnSource) client.LensRe
 			lensPoolsBySchemaVersionID:     map[string]*lensPool{},
 			reversedPoolsBySchemaVersionID: map[string]*lensPool{},
 			configs:                        map[string]client.LensConfig{},
-			txnCtxs:                        map[uint64]*txnContext{},
 		},
 	}
 }
 
 func (r *lensRegistry) getCtx(txn datastore.Txn, readonly bool) *txnContext {
-	r.txnLock.RLock()
-	if txnCtx, ok := r.txnCtxs[txn.ID()]; ok {
-		r.txnLock.RUnlock()
-		return txnCtx
-	}
-	r.txnLock.RUnlock()
-
 	txnCtx := newTxnCtx(txn)
 	if readonly {
 		return txnCtx
 	}
-
-	r.txnLock.Lock()
-	r.txnCtxs[txn.ID()] = txnCtx
-	r.txnLock.Unlock()
-
-	txnCtx.txn.OnSuccess(func() {
+	txn.OnSuccess(func() {
 		r.poolLock.Lock()
 		for schemaVersionID, locker := range txnCtx.lensPoolsBySchemaVersionID {
 			r.lensPoolsBySchemaVersionID[schemaVersionID] = locker
@@ -146,24 +127,6 @@ func (r *lensRegistry) getCtx(txn datastore.Txn, readonly bool) *txnContext {
 			r.configs[schemaVersionID] = cfg
 		}
 		r.configLock.Unlock()
-
-		r.txnLock.Lock()
-		delete(r.txnCtxs, txn.ID())
-		r.txnLock.Unlock()
-	})
-
-	txn.OnError(func() {
-		r.txnLock.Lock()
-		delete(r.txnCtxs, txn.ID())
-		r.txnLock.Unlock()
-	})
-
-	txn.OnDiscard(func() {
-		// Delete it to help reduce the build up of memory, the txnCtx will be re-contructed if the
-		// txn is reused after discard.
-		r.txnLock.Lock()
-		delete(r.txnCtxs, txn.ID())
-		r.txnLock.Unlock()
 	})
 
 	return txnCtx

@@ -27,6 +27,7 @@ type implicitTxnLensRegistry struct {
 type explicitTxnLensRegistry struct {
 	registry *lensRegistry
 	txn      datastore.Txn
+	txnCtx   *txnContext
 }
 
 var _ client.LensRegistry = (*implicitTxnLensRegistry)(nil)
@@ -36,6 +37,7 @@ func (r *implicitTxnLensRegistry) WithTxn(txn datastore.Txn) client.LensRegistry
 	return &explicitTxnLensRegistry{
 		registry: r.registry,
 		txn:      txn,
+		txnCtx:   r.registry.getCtx(txn, false),
 	}
 }
 
@@ -43,6 +45,7 @@ func (r *explicitTxnLensRegistry) WithTxn(txn datastore.Txn) client.LensRegistry
 	return &explicitTxnLensRegistry{
 		registry: r.registry,
 		txn:      txn,
+		txnCtx:   r.registry.getCtx(txn, false),
 	}
 }
 
@@ -63,7 +66,7 @@ func (r *implicitTxnLensRegistry) SetMigration(ctx context.Context, cfg client.L
 }
 
 func (r *explicitTxnLensRegistry) SetMigration(ctx context.Context, cfg client.LensConfig) error {
-	return r.registry.setMigration(ctx, r.registry.getCtx(r.txn, false), cfg)
+	return r.registry.setMigration(ctx, r.txnCtx, cfg)
 }
 
 func (r *implicitTxnLensRegistry) ReloadLenses(ctx context.Context) error {
@@ -83,7 +86,7 @@ func (r *implicitTxnLensRegistry) ReloadLenses(ctx context.Context) error {
 }
 
 func (r *explicitTxnLensRegistry) ReloadLenses(ctx context.Context) error {
-	return r.registry.reloadLenses(ctx, r.registry.getCtx(r.txn, true))
+	return r.registry.reloadLenses(ctx, r.txnCtx)
 }
 
 func (r *implicitTxnLensRegistry) MigrateUp(
@@ -106,7 +109,7 @@ func (r *explicitTxnLensRegistry) MigrateUp(
 	src enumerable.Enumerable[LensDoc],
 	schemaVersionID string,
 ) (enumerable.Enumerable[map[string]any], error) {
-	return r.registry.migrateUp(r.registry.getCtx(r.txn, true), src, schemaVersionID)
+	return r.registry.migrateUp(r.txnCtx, src, schemaVersionID)
 }
 
 func (r *implicitTxnLensRegistry) MigrateDown(
@@ -144,7 +147,7 @@ func (r *implicitTxnLensRegistry) Config(ctx context.Context) ([]client.LensConf
 }
 
 func (r *explicitTxnLensRegistry) Config(ctx context.Context) ([]client.LensConfig, error) {
-	return r.registry.config(r.registry.getCtx(r.txn, true)), nil
+	return r.registry.config(r.txnCtx), nil
 }
 
 func (r *implicitTxnLensRegistry) HasMigration(ctx context.Context, schemaVersionID string) (bool, error) {
@@ -159,5 +162,5 @@ func (r *implicitTxnLensRegistry) HasMigration(ctx context.Context, schemaVersio
 }
 
 func (r *explicitTxnLensRegistry) HasMigration(ctx context.Context, schemaVersionID string) (bool, error) {
-	return r.registry.hasMigration(r.registry.getCtx(r.txn, true), schemaVersionID), nil
+	return r.registry.hasMigration(r.txnCtx, schemaVersionID), nil
 }

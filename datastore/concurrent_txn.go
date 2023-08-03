@@ -31,7 +31,7 @@ type concurrentTxn struct {
 }
 
 // NewConcurrentTxnFrom creates a new Txn from rootstore that supports concurrent API calls
-func NewConcurrentTxnFrom(ctx context.Context, rootstore ds.TxnDatastore, id uint64, readonly bool) (Txn, error) {
+func NewConcurrentTxnFrom(ctx context.Context, rootstore ds.TxnDatastore, readonly bool) (Txn, error) {
 	var rootTxn ds.Txn
 	var err error
 
@@ -54,7 +54,6 @@ func NewConcurrentTxnFrom(ctx context.Context, rootstore ds.TxnDatastore, id uin
 	return &txn{
 		rootConcurentTxn,
 		multistore,
-		id,
 		[]func(){},
 		[]func(){},
 		[]func(){},
