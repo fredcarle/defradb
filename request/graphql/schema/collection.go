@@ -116,7 +116,7 @@ func fromAstDefinition(
 
 	// sort the fields lexicographically
 	sort.Slice(fieldDescriptions, func(i, j int) bool {
-		// make sure that the _key (KeyFieldName) is always at the beginning
+		// make sure that the _docID is always at the beginning
 		if fieldDescriptions[i].Name == request.KeyFieldName {
 			return true
 		} else if fieldDescriptions[j].Name == request.KeyFieldName {

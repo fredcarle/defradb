@@ -12,6 +12,8 @@ package client
 
 import (
 	"fmt"
+
+	"github.com/sourcenetwork/defradb/client/request"
 )
 
 // CollectionDescription describes a Collection and all its associated metadata.
@@ -268,7 +270,7 @@ type FieldDescription struct {
 
 // IsInternal returns true if this field is internally generated.
 func (f FieldDescription) IsInternal() bool {
-	return (f.Name == "_key") || f.RelationType&Relation_Type_INTERNAL_ID != 0
+	return (f.Name == request.KeyFieldName) || f.RelationType&Relation_Type_INTERNAL_ID != 0
 }
 
 // IsObject returns true if this field is an object type.

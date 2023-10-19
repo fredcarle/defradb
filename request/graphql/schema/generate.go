@@ -381,7 +381,7 @@ func (g *Generator) buildTypes(
 		fieldsThunk := (gql.FieldsThunk)(func() (gql.Fields, error) {
 			fields := gql.Fields{}
 
-			// automatically add the _key: ID field to the type
+			// automatically add the _docID: ID field to the type
 			fields[request.KeyFieldName] = &gql.Field{
 				Description: keyFieldDescription,
 				Type:        gql.ID,
@@ -389,7 +389,7 @@ func (g *Generator) buildTypes(
 
 			for _, field := range fieldDescriptions {
 				if field.Name == request.KeyFieldName {
-					// The `_key` field is included in the fieldDescriptions,
+					// The `_docID` field is included in the fieldDescriptions,
 					// but we do not wish to override the standard definition
 					// with the collection held definition (particularly the
 					// description)
