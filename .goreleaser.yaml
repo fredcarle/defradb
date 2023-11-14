@@ -35,6 +35,18 @@ builds:
       - amd64
       - arm64
 
+signs:
+  - artifacts: checksum
+    cmd: gpg2
+    args:
+      - "--batch"
+      - "-u"
+      - "{{ .Env.GPG_FINGERPRINT }}"
+      - "--output"
+      - "${signature}"
+      - "--detach-sign"
+      - "${artifact}"
+
 archives:
   - id: defradb_pg
     builds: 
@@ -50,6 +62,9 @@ archives:
     name_template: '{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{- if eq .Arch "amd64" }}x86_64{{- else }}{{ .Arch }}{{ end }}{{- if .Arm }}v{{ .Arm }}{{ end }}'
 
 release:
+  github:
+    owner: fredcarle
+    name: defradb
   header: |
     DefraDB v0.8 is a major pre-production release. Until the stable version 1.0 is reached, the SemVer minor patch number will denote notable releases, which will give the project freedom to experiment and explore potentially breaking changes.
 
@@ -92,7 +107,7 @@ dockers:
   image_templates:
   - "{{ .Env.GITHUB_REPOSITORY }}:latest"
   - "{{ .Env.GITHUB_REPOSITORY }}:{{ .Version }}"
-  - "ghcr.io/{{ .Env.GITHUB_REPOSITORY }}:{{ .Version }}"
+  # - "ghcr.io/{{ .Env.GITHUB_REPOSITORY }}:{{ .Version }}"
   use: buildx
   build_flag_templates:
   - "--pull"
