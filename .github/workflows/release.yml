@@ -13,9 +13,11 @@
 name: Release workflow
 
 on:
-  push:
-    tags: 
-      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'New tag name'
+        required: true
 
 permissions:
   contents: write
@@ -28,6 +30,8 @@ jobs:
     steps:
       - name: Checkout code into the directory
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Setup Go environment explicitly
         uses: actions/setup-go@v3
@@ -35,6 +39,9 @@ jobs:
           go-version: "1.20"
           check-latest: true
 
+      - name: Apply tag
+        run: git tag ${{ github.event.inputs.tag }}
+        
       - name: Build modules
         run: make deps:modules
       
@@ -54,13 +61,6 @@ jobs:
       #     username: ${{ github.actor }}
       #     password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Import GPG key
-        id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v6
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.PASSPHRASE }}
-
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
@@ -71,4 +71,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
-          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}
