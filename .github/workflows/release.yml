@@ -54,13 +54,6 @@ jobs:
       #     username: ${{ github.actor }}
       #     password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Import GPG key
-        id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v6
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.PASSPHRASE }}
-
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
@@ -71,4 +64,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GORELEASER_KEY: ${{ secrets.GORELEASER_KEY }}
-          GPG_FINGERPRINT: ${{ steps.import_gpg.outputs.fingerprint }}

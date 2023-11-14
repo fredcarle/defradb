@@ -22,8 +22,8 @@ builds:
     goarch:
       - amd64
       - arm64
-
-  - id: "defradb_pg"
+  # A build with the playground included. 
+  - id: "defradb_playground"
     main: ./cmd/defradb
     flags:
       - -tags=playground
@@ -35,25 +35,13 @@ builds:
       - amd64
       - arm64
 
-signs:
-  - artifacts: checksum
-    cmd: gpg2
-    args:
-      - "--batch"
-      - "-u"
-      - "{{ .Env.GPG_FINGERPRINT }}"
-      - "--output"
-      - "${signature}"
-      - "--detach-sign"
-      - "${artifact}"
-
 archives:
-  - id: defradb_pg
+  - id: defradb_playground
     builds: 
-      - defradb_pg
+      - defradb_playground
     format: binary
     # this name template makes the OS and Arch compatible with the results of `uname`.
-    name_template: '{{ .Binary }}+pg_{{ .Version }}_{{ .Os }}_{{- if eq .Arch "amd64" }}x86_64{{- else }}{{ .Arch }}{{ end }}{{- if .Arm }}v{{ .Arm }}{{ end }}'
+    name_template: '{{ .Binary }}_playground_{{ .Version }}_{{ .Os }}_{{- if eq .Arch "amd64" }}x86_64{{- else }}{{ .Arch }}{{ end }}{{- if .Arm }}v{{ .Arm }}{{ end }}'
   - id: defradb
     builds: 
       - defradb
@@ -73,6 +61,7 @@ release:
 
 changelog:
   sort: asc
+  abbrev: -1
   groups:
     - title: Features
       regexp: '^feat:.*'
@@ -103,7 +92,7 @@ milestones:
 
 dockers:
 - ids: 
-    - "defradb_pg"
+    - "defradb_playground"
   image_templates:
   - "{{ .Env.GITHUB_REPOSITORY }}:latest"
   - "{{ .Env.GITHUB_REPOSITORY }}:{{ .Version }}"
