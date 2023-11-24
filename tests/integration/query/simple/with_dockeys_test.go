@@ -16,7 +16,7 @@ import (
 	testUtils "github.com/sourcenetwork/defradb/tests/integration"
 )
 
-func TestQuerySimpleWithDocKeysFilter(t *testing.T) {
+func TestQuerySimpleWithDocIDsFilter(t *testing.T) {
 	tests := []testUtils.RequestTestCase{
 		{
 			Description: "Simple query with basic filter (single key by docIDs arg)",
@@ -128,7 +128,7 @@ func TestQuerySimpleWithDocKeysFilter(t *testing.T) {
 	}
 }
 
-func TestQuerySimpleReturnsNothinGivenEmptyDocKeysFilter(t *testing.T) {
+func TestQuerySimpleReturnsNothinGivenEmptyDocIDsFilter(t *testing.T) {
 	test := testUtils.RequestTestCase{
 		Description: "Simple query with empty docIDs arg",
 		Request: `query {

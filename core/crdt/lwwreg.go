@@ -38,7 +38,7 @@ type LWWRegDelta struct {
 	SchemaVersionID string
 	Priority        uint64
 	Data            []byte
-	DocKey          []byte
+	DocID           []byte
 	FieldName       string
 }
 
@@ -62,9 +62,9 @@ func (delta *LWWRegDelta) Marshal() ([]byte, error) {
 		SchemaVersionID string
 		Priority        uint64
 		Data            []byte
-		DocKey          []byte
+		DocID           []byte
 		FieldName       string
-	}{delta.SchemaVersionID, delta.Priority, delta.Data, delta.DocKey, delta.FieldName})
+	}{delta.SchemaVersionID, delta.Priority, delta.Data, delta.DocID, delta.FieldName})
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +123,7 @@ func (reg LWWRegister) Set(value []byte) *LWWRegDelta {
 	// return NewLWWRegister(reg.id, value, reg.clock.Apply(), reg.clock)
 	return &LWWRegDelta{
 		Data:            value,
-		DocKey:          []byte(reg.key.DocKey),
+		DocID:           []byte(reg.key.DocID),
 		FieldName:       reg.fieldName,
 		SchemaVersionID: reg.schemaVersionKey.SchemaVersionId,
 	}

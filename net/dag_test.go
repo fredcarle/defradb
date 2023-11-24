@@ -66,7 +66,7 @@ func TestSendJobWorker_WithNewJobWithClosePriorToProcessing_NoError(t *testing.T
 
 	doc, err := client.NewDocFromJSON([]byte(`{"name": "John", "age": 30}`))
 	require.NoError(t, err)
-	dsKey := core.DataStoreKeyFromDocKey(doc.Key())
+	dsKey := core.DataStoreKeyFromDocID(doc.Key())
 
 	txn, err := db.NewTxn(ctx, false)
 	require.NoError(t, err)
@@ -109,7 +109,7 @@ func TestSendJobWorker_WithNewJob_NoError(t *testing.T) {
 
 	doc, err := client.NewDocFromJSON([]byte(`{"name": "John", "age": 30}`))
 	require.NoError(t, err)
-	dsKey := core.DataStoreKeyFromDocKey(doc.Key())
+	dsKey := core.DataStoreKeyFromDocID(doc.Key())
 
 	txn, err := db.NewTxn(ctx, false)
 	require.NoError(t, err)
@@ -153,7 +153,7 @@ func TestSendJobWorker_WithCloseJob_NoError(t *testing.T) {
 
 	doc, err := client.NewDocFromJSON([]byte(`{"name": "John", "age": 30}`))
 	require.NoError(t, err)
-	dsKey := core.DataStoreKeyFromDocKey(doc.Key())
+	dsKey := core.DataStoreKeyFromDocID(doc.Key())
 
 	txn, err := db.NewTxn(ctx, false)
 	require.NoError(t, err)
@@ -169,7 +169,7 @@ func TestSendJobWorker_WithCloseJob_NoError(t *testing.T) {
 		txn:        txn,
 	}
 
-	n.closeJob <- dsKey.DocKey
+	n.closeJob <- dsKey.DocID
 
 	n.Close()
 	select {
@@ -210,7 +210,7 @@ func TestSendJobWorker_WithPeerAndNoChildren_NoError(t *testing.T) {
 
 	doc, err := client.NewDocFromJSON([]byte(`{"name": "John", "age": 30}`))
 	require.NoError(t, err)
-	dsKey := core.DataStoreKeyFromDocKey(doc.Key())
+	dsKey := core.DataStoreKeyFromDocID(doc.Key())
 
 	err = col.Create(ctx, doc)
 	require.NoError(t, err)
@@ -224,7 +224,7 @@ func TestSendJobWorker_WithPeerAndNoChildren_NoError(t *testing.T) {
 	delta := &crdt.CompositeDAGDelta{
 		SchemaVersionID: col.Schema().VersionID,
 		Priority:        1,
-		DocKey:          doc.Key().Bytes(),
+		DocID:           doc.Key().Bytes(),
 	}
 
 	node, err := makeNode(delta, []cid.Cid{})
@@ -286,7 +286,7 @@ func TestSendJobWorker_WithPeerAndChildren_NoError(t *testing.T) {
 
 	doc, err := client.NewDocFromJSON([]byte(`{"name": "John", "age": 30}`))
 	require.NoError(t, err)
-	dsKey := core.DataStoreKeyFromDocKey(doc.Key())
+	dsKey := core.DataStoreKeyFromDocID(doc.Key())
 
 	err = col.Create(ctx, doc)
 	require.NoError(t, err)
@@ -302,7 +302,7 @@ func TestSendJobWorker_WithPeerAndChildren_NoError(t *testing.T) {
 		delta := &crdt.LWWRegDelta{
 			SchemaVersionID: col.Schema().VersionID,
 			Priority:        1,
-			DocKey:          doc.Key().Bytes(),
+			DocID:           doc.Key().Bytes(),
 			FieldName:       k,
 		}
 
@@ -318,7 +318,7 @@ func TestSendJobWorker_WithPeerAndChildren_NoError(t *testing.T) {
 	delta := &crdt.CompositeDAGDelta{
 		SchemaVersionID: col.Schema().VersionID,
 		Priority:        1,
-		DocKey:          doc.Key().Bytes(),
+		DocID:           doc.Key().Bytes(),
 		SubDAGs:         links,
 	}
 

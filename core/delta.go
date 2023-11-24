@@ -32,7 +32,7 @@ type CompositeDelta interface {
 type NetDelta interface {
 	Delta
 	GetSchemaID() string
-	// DocKey() client.DocKey
+	// DocID() client.DocID
 }
 
 // DAGLink represents a link to another object in a DAG.

@@ -200,7 +200,7 @@ func (db *db) updateSchema(
 			if _, ok := schema.GetField(idFieldName); !ok {
 				schema.Fields = append(schema.Fields, client.FieldDescription{
 					Name:         idFieldName,
-					Kind:         client.FieldKind_DocKey,
+					Kind:         client.FieldKind_DocID,
 					RelationType: client.Relation_Type_INTERNAL_ID,
 					RelationName: field.RelationName,
 				})
@@ -383,8 +383,8 @@ func validateUpdateSchemaFields(
 				idFieldName := proposedField.Name + request.RelatedObjectID
 				idField, idFieldFound := proposedDesc.GetField(idFieldName)
 				if idFieldFound {
-					if idField.Kind != client.FieldKind_DocKey {
-						return false, NewErrRelationalFieldIDInvalidType(idField.Name, client.FieldKind_DocKey, idField.Kind)
+					if idField.Kind != client.FieldKind_DocID {
+						return false, NewErrRelationalFieldIDInvalidType(idField.Name, client.FieldKind_DocID, idField.Kind)
 					}
 
 					if idField.RelationType != client.Relation_Type_INTERNAL_ID {
@@ -645,23 +645,23 @@ func (db *db) getAllCollections(ctx context.Context, txn datastore.Txn) ([]clien
 	return cols, nil
 }
 
-// GetAllDocKeys returns all the document keys that exist in the collection.
+// GetAllDocIDs returns all the document keys that exist in the collection.
 //
 // @todo: We probably need a lock on the collection for this kind of op since
 // it hits every key and will cause Tx conflicts for concurrent Txs
-func (c *collection) GetAllDocKeys(ctx context.Context) (<-chan client.DocKeysResult, error) {
+func (c *collection) GetAllDocIDs(ctx context.Context) (<-chan client.DocIDsResult, error) {
 	txn, err := c.getTxn(ctx, true)
 	if err != nil {
 		return nil, err
 	}
 
-	return c.getAllDocKeysChan(ctx, txn)
+	return c.getAllDocIDsChan(ctx, txn)
 }
 
-func (c *collection) getAllDocKeysChan(
+func (c *collection) getAllDocIDsChan(
 	ctx context.Context,
 	txn datastore.Txn,
-) (<-chan client.DocKeysResult, error) {
+) (<-chan client.DocIDsResult, error) {
 	prefix := core.PrimaryDataStoreKey{ // empty path for all keys prefix
 		CollectionId: fmt.Sprint(c.ID()),
 	}
@@ -673,11 +673,11 @@ func (c *collection) getAllDocKeysChan(
 		return nil, err
 	}
 
-	resCh := make(chan client.DocKeysResult)
+	resCh := make(chan client.DocIDsResult)
 	go func() {
 		defer func() {
 			if err := q.Close(); err != nil {
-				log.ErrorE(ctx, "Failed to close AllDocKeys query", err)
+				log.ErrorE(ctx, "Failed to close AllDocIDs query", err)
 			}
 			close(resCh)
 			c.discardImplicitTxn(ctx, txn)
@@ -692,23 +692,23 @@ func (c *collection) getAllDocKeysChan(
 				// noop, just continue on the with the for loop
 			}
 			if res.Error != nil {
-				resCh <- client.DocKeysResult{
+				resCh <- client.DocIDsResult{
 					Err: res.Error,
 				}
 				return
 			}
 
 			// now we have a doc key
-			rawDocKey := ds.NewKey(res.Key).BaseNamespace()
-			key, err := client.NewDocKeyFromString(rawDocKey)
+			rawDocID := ds.NewKey(res.Key).BaseNamespace()
+			docID, err := client.NewDocIDFromString(rawDocID)
 			if err != nil {
-				resCh <- client.DocKeysResult{
+				resCh <- client.DocIDsResult{
 					Err: res.Error,
 				}
 				return
 			}
-			resCh <- client.DocKeysResult{
-				Key: key,
+			resCh <- client.DocIDsResult{
+				ID: docID,
 			}
 		}
 	}()
@@ -757,7 +757,7 @@ func (c *collection) WithTxn(txn datastore.Txn) client.Collection {
 }
 
 // Create a new document.
-// Will verify the DocKey/CID to ensure that the new document is correctly formatted.
+// Will verify the DocID/CID to ensure that the new document is correctly formatted.
 func (c *collection) Create(ctx context.Context, doc *client.Document) error {
 	txn, err := c.getTxn(ctx, false)
 	if err != nil {
@@ -773,7 +773,7 @@ func (c *collection) Create(ctx context.Context, doc *client.Document) error {
 }
 
 // CreateMany creates a collection of documents at once.
-// Will verify the DocKey/CID to ensure that the new documents are correctly formatted.
+// Will verify the DocID/CID to ensure that the new documents are correctly formatted.
 func (c *collection) CreateMany(ctx context.Context, docs []*client.Document) error {
 	txn, err := c.getTxn(ctx, false)
 	if err != nil {
@@ -792,27 +792,27 @@ func (c *collection) CreateMany(ctx context.Context, docs []*client.Document) er
 
 func (c *collection) getKeysFromDoc(
 	doc *client.Document,
-) (client.DocKey, core.PrimaryDataStoreKey, error) {
-	docKey, err := doc.GenerateDocKey()
+) (client.DocID, core.PrimaryDataStoreKey, error) {
+	docID, err := doc.GenerateDocID()
 	if err != nil {
-		return client.DocKey{}, core.PrimaryDataStoreKey{}, err
+		return client.DocID{}, core.PrimaryDataStoreKey{}, err
 	}
 
-	primaryKey := c.getPrimaryKeyFromDocKey(docKey)
-	if primaryKey.DocKey != doc.Key().String() {
-		return client.DocKey{}, core.PrimaryDataStoreKey{},
-			NewErrDocVerification(doc.Key().String(), primaryKey.DocKey)
+	primaryKey := c.getPrimaryKeyFromDocID(docID)
+	if primaryKey.DocID != doc.Key().String() {
+		return client.DocID{}, core.PrimaryDataStoreKey{},
+			NewErrDocVerification(doc.Key().String(), primaryKey.DocID)
 	}
-	return docKey, primaryKey, nil
+	return docID, primaryKey, nil
 }
 
 func (c *collection) create(ctx context.Context, txn datastore.Txn, doc *client.Document) error {
-	// This has to be done before dockey verification happens in the next step.
-	if err := doc.RemapAliasFieldsAndDockey(c.Schema().Fields); err != nil {
+	// This has to be done before docID verification happens in the next step.
+	if err := doc.RemapAliasFieldsAndDocID(c.Schema().Fields); err != nil {
 		return err
 	}
 
-	dockey, primaryKey, err := c.getKeysFromDoc(doc)
+	docID, primaryKey, err := c.getKeysFromDoc(doc)
 	if err != nil {
 		return err
 	}
@@ -823,15 +823,15 @@ func (c *collection) create(ctx context.Context, txn datastore.Txn, doc *client.
 		return err
 	}
 	if exists {
-		return NewErrDocumentAlreadyExists(primaryKey.DocKey)
+		return NewErrDocumentAlreadyExists(primaryKey.DocID)
 	}
 	if isDeleted {
-		return NewErrDocumentDeleted(primaryKey.DocKey)
+		return NewErrDocumentDeleted(primaryKey.DocID)
 	}
 
 	// write value object marker if we have an empty doc
 	if len(doc.Values()) == 0 {
-		valueKey := c.getDSKeyFromDockey(dockey)
+		valueKey := c.getDSKeyFromDocID(docID)
 		err = txn.Datastore().Put(ctx, valueKey.ToDS(), []byte{base.ObjectMarker})
 		if err != nil {
 			return err
@@ -857,7 +857,7 @@ func (c *collection) Update(ctx context.Context, doc *client.Document) error {
 	}
 	defer c.discardImplicitTxn(ctx, txn)
 
-	primaryKey := c.getPrimaryKeyFromDocKey(doc.Key())
+	primaryKey := c.getPrimaryKeyFromDocID(doc.Key())
 	exists, isDeleted, err := c.exists(ctx, txn, primaryKey)
 	if err != nil {
 		return err
@@ -866,7 +866,7 @@ func (c *collection) Update(ctx context.Context, doc *client.Document) error {
 		return client.ErrDocumentNotFound
 	}
 	if isDeleted {
-		return NewErrDocumentDeleted(primaryKey.DocKey)
+		return NewErrDocumentDeleted(primaryKey.DocID)
 	}
 
 	err = c.update(ctx, txn, doc)
@@ -900,7 +900,7 @@ func (c *collection) Save(ctx context.Context, doc *client.Document) error {
 	defer c.discardImplicitTxn(ctx, txn)
 
 	// Check if document already exists with key
-	primaryKey := c.getPrimaryKeyFromDocKey(doc.Key())
+	primaryKey := c.getPrimaryKeyFromDocID(doc.Key())
 	exists, isDeleted, err := c.exists(ctx, txn, primaryKey)
 	if err != nil {
 		return err
@@ -948,7 +948,7 @@ func (c *collection) save(
 	// Loop through doc values
 	//	=> 		instantiate MerkleCRDT objects
 	//	=> 		Set/Publish new CRDT values
-	primaryKey := c.getPrimaryKeyFromDocKey(doc.Key())
+	primaryKey := c.getPrimaryKeyFromDocID(doc.Key())
 	links := make([]core.DAGLink, 0)
 	docProperties := make(map[string]any)
 	for k, v := range doc.Fields() {
@@ -973,7 +973,7 @@ func (c *collection) save(
 			if isSecondaryRelationID {
 				primaryId := val.Value().(string)
 
-				err = c.patchPrimaryDoc(ctx, txn, c.Name(), relationFieldDescription, primaryKey.DocKey, primaryId)
+				err = c.patchPrimaryDoc(ctx, txn, c.Name(), relationFieldDescription, primaryKey.DocID, primaryId)
 				if err != nil {
 					return cid.Undef, err
 				}
@@ -1033,7 +1033,7 @@ func (c *collection) save(
 			func() {
 				c.db.events.Updates.Value().Publish(
 					events.Update{
-						DocKey:   doc.Key().String(),
+						DocID:    doc.Key().String(),
 						Cid:      headNode.Cid(),
 						SchemaID: c.Schema().SchemaID,
 						Block:    headNode,
@@ -1054,7 +1054,7 @@ func (c *collection) save(
 func (c *collection) validateOneToOneLinkDoesntAlreadyExist(
 	ctx context.Context,
 	txn datastore.Txn,
-	docKey string,
+	docID string,
 	fieldDescription client.FieldDescription,
 	value any,
 ) error {
@@ -1077,7 +1077,7 @@ func (c *collection) validateOneToOneLinkDoesntAlreadyExist(
 	filter := fmt.Sprintf(
 		`{_and: [{%s: {_ne: "%s"}}, {%s: {_eq: "%s"}}]}`,
 		request.KeyFieldName,
-		docKey,
+		docID,
 		fieldDescription.Name,
 		value,
 	)
@@ -1118,7 +1118,7 @@ func (c *collection) validateOneToOneLinkDoesntAlreadyExist(
 		if err != nil {
 			return err
 		}
-		return NewErrOneOneAlreadyLinked(docKey, existingDocument.GetKey(), objFieldDescription.RelationName)
+		return NewErrOneOneAlreadyLinked(docID, existingDocument.GetKey(), objFieldDescription.RelationName)
 	}
 
 	err = selectionPlan.Close()
@@ -1132,15 +1132,15 @@ func (c *collection) validateOneToOneLinkDoesntAlreadyExist(
 // Delete will attempt to delete a document by key will return true if a deletion is successful,
 // and return false, along with an error, if it cannot.
 // If the document doesn't exist, then it will return false, and a ErrDocumentNotFound error.
-// This operation will all state relating to the given DocKey. This includes data, block, and head storage.
-func (c *collection) Delete(ctx context.Context, key client.DocKey) (bool, error) {
+// This operation will all state relating to the given DocID. This includes data, block, and head storage.
+func (c *collection) Delete(ctx context.Context, key client.DocID) (bool, error) {
 	txn, err := c.getTxn(ctx, false)
 	if err != nil {
 		return false, err
 	}
 	defer c.discardImplicitTxn(ctx, txn)
 
-	primaryKey := c.getPrimaryKeyFromDocKey(key)
+	primaryKey := c.getPrimaryKeyFromDocID(key)
 	exists, isDeleted, err := c.exists(ctx, txn, primaryKey)
 	if err != nil {
 		return false, err
@@ -1149,7 +1149,7 @@ func (c *collection) Delete(ctx context.Context, key client.DocKey) (bool, error
 		return false, client.ErrDocumentNotFound
 	}
 	if isDeleted {
-		return false, NewErrDocumentDeleted(primaryKey.DocKey)
+		return false, NewErrDocumentDeleted(primaryKey.DocID)
 	}
 
 	err = c.applyDelete(ctx, txn, primaryKey)
@@ -1159,15 +1159,15 @@ func (c *collection) Delete(ctx context.Context, key client.DocKey) (bool, error
 	return true, c.commitImplicitTxn(ctx, txn)
 }
 
-// Exists checks if a given document exists with supplied DocKey.
-func (c *collection) Exists(ctx context.Context, key client.DocKey) (bool, error) {
+// Exists checks if a given document exists with supplied DocID.
+func (c *collection) Exists(ctx context.Context, key client.DocID) (bool, error) {
 	txn, err := c.getTxn(ctx, false)
 	if err != nil {
 		return false, err
 	}
 	defer c.discardImplicitTxn(ctx, txn)
 
-	primaryKey := c.getPrimaryKeyFromDocKey(key)
+	primaryKey := c.getPrimaryKeyFromDocID(key)
 	exists, isDeleted, err := c.exists(ctx, txn, primaryKey)
 	if err != nil && !errors.Is(err, ds.ErrNotFound) {
 		return false, err
@@ -1335,17 +1335,17 @@ func (c *collection) commitImplicitTxn(ctx context.Context, txn datastore.Txn) e
 	return nil
 }
 
-func (c *collection) getPrimaryKeyFromDocKey(docKey client.DocKey) core.PrimaryDataStoreKey {
+func (c *collection) getPrimaryKeyFromDocID(docID client.DocID) core.PrimaryDataStoreKey {
 	return core.PrimaryDataStoreKey{
 		CollectionId: fmt.Sprint(c.ID()),
-		DocKey:       docKey.String(),
+		DocID:        docID.String(),
 	}
 }
 
-func (c *collection) getDSKeyFromDockey(docKey client.DocKey) core.DataStoreKey {
+func (c *collection) getDSKeyFromDocID(docID client.DocID) core.DataStoreKey {
 	return core.DataStoreKey{
 		CollectionID: fmt.Sprint(c.ID()),
-		DocKey:       docKey.String(),
+		DocID:        docID.String(),
 		InstanceType: core.ValueKey,
 	}
 }
@@ -1358,7 +1358,7 @@ func (c *collection) tryGetFieldKey(key core.PrimaryDataStoreKey, fieldName stri
 
 	return core.DataStoreKey{
 		CollectionID: key.CollectionId,
-		DocKey:       key.DocKey,
+		DocID:        key.DocID,
 		FieldId:      strconv.FormatUint(uint64(fieldId), 10),
 	}, true
 }

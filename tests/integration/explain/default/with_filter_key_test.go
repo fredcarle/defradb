@@ -17,7 +17,7 @@ import (
 	explainUtils "github.com/sourcenetwork/defradb/tests/integration/explain"
 )
 
-func TestDefaultExplainRequestWithDocKeyFilter(t *testing.T) {
+func TestDefaultExplainRequestWithDocIDFilter(t *testing.T) {
 	test := testUtils.TestCase{
 
 		Description: "Explain (default) request with docID filter.",
@@ -69,7 +69,7 @@ func TestDefaultExplainRequestWithDocKeyFilter(t *testing.T) {
 	explainUtils.ExecuteTestCase(t, test)
 }
 
-func TestDefaultExplainRequestWithDocKeysFilterUsingOneKey(t *testing.T) {
+func TestDefaultExplainRequestWithDocIDsFilterUsingOneKey(t *testing.T) {
 	test := testUtils.TestCase{
 
 		Description: "Explain (default) request with docIDs filter using one key.",
@@ -121,7 +121,7 @@ func TestDefaultExplainRequestWithDocKeysFilterUsingOneKey(t *testing.T) {
 	explainUtils.ExecuteTestCase(t, test)
 }
 
-func TestDefaultExplainRequestWithDocKeysFilterUsingMultipleButDuplicateKeys(t *testing.T) {
+func TestDefaultExplainRequestWithDocIDsFilterUsingMultipleButDuplicateKeys(t *testing.T) {
 	test := testUtils.TestCase{
 
 		Description: "Explain (default) request with docIDs filter using multiple but duplicate keys.",
@@ -183,7 +183,7 @@ func TestDefaultExplainRequestWithDocKeysFilterUsingMultipleButDuplicateKeys(t *
 	explainUtils.ExecuteTestCase(t, test)
 }
 
-func TestDefaultExplainRequestWithDocKeysFilterUsingMultipleUniqueKeys(t *testing.T) {
+func TestDefaultExplainRequestWithDocIDsFilterUsingMultipleUniqueKeys(t *testing.T) {
 	test := testUtils.TestCase{
 
 		Description: "Explain (default) request with docIDs filter using multiple unique keys.",

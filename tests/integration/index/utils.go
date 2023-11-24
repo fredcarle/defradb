@@ -113,19 +113,19 @@ func (this *createDocGenerator) GenerateDocs(doc map[string]any, typeName string
 
 	result = append(result, testUtils.CreateDoc{CollectionID: typeDef.index, Doc: docStr})
 
-	var docKey string
+	var docID string
 	for _, prop := range typeDef.props {
 		if prop.isRelation {
 			if _, hasProp := doc[prop.name]; hasProp {
 				if !prop.isPrimary.Value() {
-					if docKey == "" {
+					if docID == "" {
 						clientDoc, err := client.NewDocFromJSON([]byte(docStr))
 						if err != nil {
 							panic("Failed to create doc from JSON: " + err.Error())
 						}
-						docKey = clientDoc.Key().String()
+						docID = clientDoc.Key().String()
 					}
-					actions := this.generateSecondaryDocs(doc, typeName, &prop, docKey)
+					actions := this.generateSecondaryDocs(doc, typeName, &prop, docID)
 					result = append(result, actions...)
 				}
 			}
@@ -138,7 +138,7 @@ func (this *createDocGenerator) generateSecondaryDocs(
 	primaryDoc map[string]any,
 	primaryTypeName string,
 	relProp *propDefinition,
-	primaryDocKey string,
+	primaryDocID string,
 ) []any {
 	result := []any{}
 	relTypeDef := this.types[relProp.typeStr]
@@ -149,12 +149,12 @@ func (this *createDocGenerator) generateSecondaryDocs(
 			switch relVal := primaryDoc[relProp.name].(type) {
 			case docsCollection:
 				for _, relDoc := range relVal.docs {
-					relDoc[primaryPropName] = primaryDocKey
+					relDoc[primaryPropName] = primaryDocID
 					actions := this.GenerateDocs(relDoc, relTypeDef.name)
 					result = append(result, actions...)
 				}
 			case map[string]any:
-				relVal[primaryPropName] = primaryDocKey
+				relVal[primaryPropName] = primaryDocID
 				actions := this.GenerateDocs(relVal, relTypeDef.name)
 				result = append(result, actions...)
 			}

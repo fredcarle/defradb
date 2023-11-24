@@ -38,25 +38,25 @@ Example: delete by filter
 
 			switch {
 			case len(keys) == 1:
-				docKey, err := client.NewDocKeyFromString(keys[0])
+				docID, err := client.NewDocIDFromString(keys[0])
 				if err != nil {
 					return err
 				}
-				res, err := col.DeleteWithKey(cmd.Context(), docKey)
+				res, err := col.DeleteWithKey(cmd.Context(), docID)
 				if err != nil {
 					return err
 				}
 				return writeJSON(cmd, res)
 			case len(keys) > 1:
-				docKeys := make([]client.DocKey, len(keys))
+				docIDs := make([]client.DocID, len(keys))
 				for i, v := range keys {
-					docKey, err := client.NewDocKeyFromString(v)
+					docID, err := client.NewDocIDFromString(v)
 					if err != nil {
 						return err
 					}
-					docKeys[i] = docKey
+					docIDs[i] = docID
 				}
-				res, err := col.DeleteWithKeys(cmd.Context(), docKeys)
+				res, err := col.DeleteWithKeys(cmd.Context(), docIDs)
 				if err != nil {
 					return err
 				}
@@ -68,7 +68,7 @@ Example: delete by filter
 				}
 				return writeJSON(cmd, res)
 			default:
-				return ErrNoDocKeyOrFilter
+				return ErrNoDocIDOrFilter
 			}
 		},
 	}

@@ -60,7 +60,7 @@ func (c *Collection) Create(ctx context.Context, doc *client.Document) error {
 
 	// We must call this here, else the doc key on the given object will not match
 	// that of the document saved in the database
-	err := doc.RemapAliasFieldsAndDockey(c.Schema().Fields)
+	err := doc.RemapAliasFieldsAndDocID(c.Schema().Fields)
 	if err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func (c *Collection) CreateMany(ctx context.Context, docs []*client.Document) er
 	for i, doc := range docs {
 		// We must call this here, else the doc key on the given object will not match
 		// that of the document saved in the database
-		err := doc.RemapAliasFieldsAndDockey(c.Schema().Fields)
+		err := doc.RemapAliasFieldsAndDocID(c.Schema().Fields)
 		if err != nil {
 			return err
 		}
@@ -142,16 +142,16 @@ func (c *Collection) Save(ctx context.Context, doc *client.Document) error {
 	return err
 }
 
-func (c *Collection) Delete(ctx context.Context, docKey client.DocKey) (bool, error) {
-	res, err := c.DeleteWithKey(ctx, docKey)
+func (c *Collection) Delete(ctx context.Context, docID client.DocID) (bool, error) {
+	res, err := c.DeleteWithKey(ctx, docID)
 	if err != nil {
 		return false, err
 	}
 	return res.Count == 1, nil
 }
 
-func (c *Collection) Exists(ctx context.Context, docKey client.DocKey) (bool, error) {
-	_, err := c.Get(ctx, docKey, false)
+func (c *Collection) Exists(ctx context.Context, docID client.DocID) (bool, error) {
+	_, err := c.Get(ctx, docID, false)
 	if err != nil {
 		return false, err
 	}
@@ -162,9 +162,9 @@ func (c *Collection) UpdateWith(ctx context.Context, target any, updater string)
 	switch t := target.(type) {
 	case string, map[string]any, *request.Filter:
 		return c.UpdateWithFilter(ctx, t, updater)
-	case client.DocKey:
+	case client.DocID:
 		return c.UpdateWithKey(ctx, t, updater)
-	case []client.DocKey:
+	case []client.DocID:
 		return c.UpdateWithKeys(ctx, t, updater)
 	default:
 		return nil, client.ErrInvalidUpdateTarget
@@ -206,7 +206,7 @@ func (c *Collection) UpdateWithFilter(
 
 func (c *Collection) UpdateWithKey(
 	ctx context.Context,
-	key client.DocKey,
+	key client.DocID,
 	updater string,
 ) (*client.UpdateResult, error) {
 	args := []string{"client", "collection", "update"}
@@ -219,15 +219,15 @@ func (c *Collection) UpdateWithKey(
 
 func (c *Collection) UpdateWithKeys(
 	ctx context.Context,
-	docKeys []client.DocKey,
+	docIDs []client.DocID,
 	updater string,
 ) (*client.UpdateResult, error) {
 	args := []string{"client", "collection", "update"}
 	args = append(args, "--name", c.Description().Name)
 	args = append(args, "--updater", updater)
 
-	keys := make([]string, len(docKeys))
-	for i, v := range docKeys {
+	keys := make([]string, len(docIDs))
+	for i, v := range docIDs {
 		keys[i] = v.String()
 	}
 	args = append(args, "--key", strings.Join(keys, ","))
@@ -239,9 +239,9 @@ func (c *Collection) DeleteWith(ctx context.Context, target any) (*client.Delete
 	switch t := target.(type) {
 	case string, map[string]any, *request.Filter:
 		return c.DeleteWithFilter(ctx, t)
-	case client.DocKey:
+	case client.DocID:
 		return c.DeleteWithKey(ctx, t)
-	case []client.DocKey:
+	case []client.DocID:
 		return c.DeleteWithKeys(ctx, t)
 	default:
 		return nil, client.ErrInvalidDeleteTarget
@@ -276,20 +276,20 @@ func (c *Collection) DeleteWithFilter(ctx context.Context, filter any) (*client.
 	return c.deleteWith(ctx, args)
 }
 
-func (c *Collection) DeleteWithKey(ctx context.Context, docKey client.DocKey) (*client.DeleteResult, error) {
+func (c *Collection) DeleteWithKey(ctx context.Context, docID client.DocID) (*client.DeleteResult, error) {
 	args := []string{"client", "collection", "delete"}
 	args = append(args, "--name", c.Description().Name)
-	args = append(args, "--key", docKey.String())
+	args = append(args, "--key", docID.String())
 
 	return c.deleteWith(ctx, args)
 }
 
-func (c *Collection) DeleteWithKeys(ctx context.Context, docKeys []client.DocKey) (*client.DeleteResult, error) {
+func (c *Collection) DeleteWithKeys(ctx context.Context, docIDs []client.DocID) (*client.DeleteResult, error) {
 	args := []string{"client", "collection", "delete"}
 	args = append(args, "--name", c.Description().Name)
 
-	keys := make([]string, len(docKeys))
-	for i, v := range docKeys {
+	keys := make([]string, len(docIDs))
+	for i, v := range docIDs {
 		keys[i] = v.String()
 	}
 	args = append(args, "--key", strings.Join(keys, ","))
@@ -297,7 +297,7 @@ func (c *Collection) DeleteWithKeys(ctx context.Context, docKeys []client.DocKey
 	return c.deleteWith(ctx, args)
 }
 
-func (c *Collection) Get(ctx context.Context, key client.DocKey, showDeleted bool) (*client.Document, error) {
+func (c *Collection) Get(ctx context.Context, key client.DocID, showDeleted bool) (*client.Document, error) {
 	args := []string{"client", "collection", "get"}
 	args = append(args, "--name", c.Description().Name)
 	args = append(args, key.String())
@@ -324,7 +324,7 @@ func (c *Collection) WithTxn(tx datastore.Txn) client.Collection {
 	}
 }
 
-func (c *Collection) GetAllDocKeys(ctx context.Context) (<-chan client.DocKeysResult, error) {
+func (c *Collection) GetAllDocIDs(ctx context.Context) (<-chan client.DocIDsResult, error) {
 	args := []string{"client", "collection", "keys"}
 	args = append(args, "--name", c.Description().Name)
 
@@ -332,32 +332,32 @@ func (c *Collection) GetAllDocKeys(ctx context.Context) (<-chan client.DocKeysRe
 	if err != nil {
 		return nil, err
 	}
-	docKeyCh := make(chan client.DocKeysResult)
+	docIDCh := make(chan client.DocIDsResult)
 
 	go func() {
 		dec := json.NewDecoder(stdOut)
-		defer close(docKeyCh)
+		defer close(docIDCh)
 
 		for {
-			var res http.DocKeyResult
+			var res http.DocIDResult
 			if err := dec.Decode(&res); err != nil {
 				return
 			}
-			key, err := client.NewDocKeyFromString(res.Key)
+			docID, err := client.NewDocIDFromString(res.ID)
 			if err != nil {
 				return
 			}
-			docKey := client.DocKeysResult{
-				Key: key,
+			result := client.DocIDsResult{
+				ID: docID,
 			}
 			if res.Error != "" {
-				docKey.Err = fmt.Errorf(res.Error)
+				result.Err = fmt.Errorf(res.Error)
 			}
-			docKeyCh <- docKey
+			docIDCh <- result
 		}
 	}()
 
-	return docKeyCh, nil
+	return docIDCh, nil
 }
 
 func (c *Collection) CreateIndex(

@@ -94,8 +94,8 @@ func newServer(p *Peer, db client.DB, opts ...grpc.DialOption) (*server, error) 
 			return nil, err
 		}
 
-		// Get all DocKeys across all collections in the DB
-		log.Debug(p.ctx, "Getting all existing DocKey...")
+		// Get all DocIDs across all collections in the DB
+		log.Debug(p.ctx, "Getting all existing DocID...")
 		cols, err := s.db.GetAllCollections(s.peer.ctx)
 		if err != nil {
 			return nil, err
@@ -103,28 +103,28 @@ func newServer(p *Peer, db client.DB, opts ...grpc.DialOption) (*server, error) 
 
 		i := 0
 		for _, col := range cols {
-			// If we subscribed to the collection, we skip subscribing to the collection's dockeys.
+			// If we subscribed to the collection, we skip subscribing to the collection's docIDs.
 			if _, ok := colMap[col.SchemaID()]; ok {
 				continue
 			}
-			keyChan, err := col.GetAllDocKeys(p.ctx)
+			docIDChan, err := col.GetAllDocIDs(p.ctx)
 			if err != nil {
 				return nil, err
 			}
 
-			for key := range keyChan {
+			for result := range docIDChan {
 				log.Debug(
 					p.ctx,
-					"Registering existing DocKey pubsub topic",
-					logging.NewKV("DocKey", key.Key.String()),
+					"Registering existing DocID pubsub topic",
+					logging.NewKV("DocID", result.ID.String()),
 				)
-				if err := s.addPubSubTopic(key.Key.String(), true); err != nil {
+				if err := s.addPubSubTopic(result.ID.String(), true); err != nil {
 					return nil, err
 				}
 				i++
 			}
 		}
-		log.Debug(p.ctx, "Finished registering all DocKey pubsub topics", logging.NewKV("Count", i))
+		log.Debug(p.ctx, "Finished registering all DocID pubsub topics", logging.NewKV("Count", i))
 	}
 
 	var err error
@@ -166,29 +166,29 @@ type docQueue struct {
 	mu   sync.Mutex
 }
 
-// add adds a docKey to the queue. If the docKey is already in the queue, it will
-// wait for the docKey to be removed from the queue. For every add call, done must
-// be called to remove the docKey from the queue. Otherwise, subsequent add calls will
+// add adds a docID to the queue. If the docID is already in the queue, it will
+// wait for the docID to be removed from the queue. For every add call, done must
+// be called to remove the docID from the queue. Otherwise, subsequent add calls will
 // block forever.
-func (dq *docQueue) add(docKey string) {
+func (dq *docQueue) add(docID string) {
 	dq.mu.Lock()
-	done, ok := dq.docs[docKey]
+	done, ok := dq.docs[docID]
 	if !ok {
-		dq.docs[docKey] = make(chan struct{})
+		dq.docs[docID] = make(chan struct{})
 	}
 	dq.mu.Unlock()
 	if ok {
 		<-done
-		dq.add(docKey)
+		dq.add(docID)
 	}
 }
 
-func (dq *docQueue) done(docKey string) {
+func (dq *docQueue) done(docID string) {
 	dq.mu.Lock()
 	defer dq.mu.Unlock()
-	done, ok := dq.docs[docKey]
+	done, ok := dq.docs[docID]
 	if ok {
-		delete(dq.docs, docKey)
+		delete(dq.docs, docID)
 		close(done)
 	}
 }
@@ -205,14 +205,14 @@ func (s *server) PushLog(ctx context.Context, req *pb.PushLogRequest) (*pb.PushL
 	if err != nil {
 		return nil, err
 	}
-	dockey, err := client.NewDocKeyFromString(string(req.Body.DocKey))
+	docID, err := client.NewDocIDFromString(string(req.Body.DocID))
 	if err != nil {
 		return nil, err
 	}
 
-	s.docQueue.add(dockey.String())
+	s.docQueue.add(docID.String())
 	defer func() {
-		s.docQueue.done(dockey.String())
+		s.docQueue.done(docID.String())
 		if s.pushLogEmitter != nil {
 			byPeer, err := libpeer.Decode(req.Body.Creator)
 			if err != nil {
@@ -247,7 +247,7 @@ func (s *server) PushLog(ctx context.Context, req *pb.PushLogRequest) (*pb.PushL
 	}
 
 	schemaID := string(req.Body.SchemaID)
-	docKey := core.DataStoreKeyFromDocKey(dockey)
+	dsKey := core.DataStoreKeyFromDocID(docID)
 
 	var txnErr error
 	for retry := 0; retry < s.peer.db.MaxTxnRetries(); retry++ {
@@ -278,13 +278,13 @@ func (s *server) PushLog(ctx context.Context, req *pb.PushLogRequest) (*pb.PushL
 			return nil, errors.Wrap("failed to decode block to ipld.Node", err)
 		}
 
-		cids, err := s.peer.processLog(ctx, txn, col, docKey, "", nd, getter, false)
+		cids, err := s.peer.processLog(ctx, txn, col, dsKey, "", nd, getter, false)
 		if err != nil {
 			log.ErrorE(
 				ctx,
 				"Failed to process PushLog node",
 				err,
-				logging.NewKV("DocKey", docKey),
+				logging.NewKV("DocID", docID),
 				logging.NewKV("CID", cid),
 			)
 		}
@@ -298,11 +298,11 @@ func (s *server) PushLog(ctx context.Context, req *pb.PushLogRequest) (*pb.PushL
 				logging.NewKV("CID", cid),
 			)
 			var session sync.WaitGroup
-			s.peer.handleChildBlocks(&session, txn, col, docKey, "", nd, cids, getter)
+			s.peer.handleChildBlocks(&session, txn, col, dsKey, "", nd, cids, getter)
 			session.Wait()
-			// dagWorkers specific to the dockey will have been spawned within handleChildBlocks.
+			// dagWorkers specific to the docID will have been spawned within handleChildBlocks.
 			// Once we are done with the dag syncing process, we can get rid of those workers.
-			s.peer.closeJob <- docKey.DocKey
+			s.peer.closeJob <- dsKey.DocID
 		} else {
 			log.Debug(ctx, "No more children to process for log", logging.NewKV("CID", cid))
 		}
@@ -314,10 +314,10 @@ func (s *server) PushLog(ctx context.Context, req *pb.PushLogRequest) (*pb.PushL
 			return &pb.PushLogReply{}, txnErr
 		}
 
-		// Once processed, subscribe to the dockey topic on the pubsub network unless we already
+		// Once processed, subscribe to the docID topic on the pubsub network unless we already
 		// suscribe to the collection.
 		if !s.hasPubSubTopic(col.SchemaID()) {
-			err = s.addPubSubTopic(docKey.DocKey, true)
+			err = s.addPubSubTopic(dsKey.DocID, true)
 			if err != nil {
 				return nil, err
 			}
@@ -443,7 +443,7 @@ func (s *server) publishLog(ctx context.Context, topic string, req *pb.PushLogRe
 		ctx,
 		"Published log",
 		logging.NewKV("CID", cid),
-		logging.NewKV("DocKey", topic),
+		logging.NewKV("DocID", topic),
 	)
 	return nil
 }
@@ -472,7 +472,7 @@ func (s *server) pubSubMessageHandler(from libpeer.ID, topic string, msg []byte)
 	return nil, nil
 }
 
-// pubSubEventHandler logs events from the subscribed dockey topics.
+// pubSubEventHandler logs events from the subscribed docID topics.
 func (s *server) pubSubEventHandler(from libpeer.ID, topic string, msg []byte) {
 	log.Info(
 		s.peer.ctx,

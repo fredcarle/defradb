@@ -28,8 +28,8 @@ const (
 type Select struct {
 	Field
 
-	DocKeys immutable.Option[[]string]
-	CID     immutable.Option[string]
+	DocIDs immutable.Option[[]string]
+	CID    immutable.Option[string]
 
 	// Root is the top level type of parsed request
 	Root SelectionType

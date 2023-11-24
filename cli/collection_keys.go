@@ -31,18 +31,18 @@ Example:
 				return cmd.Usage()
 			}
 
-			docCh, err := col.GetAllDocKeys(cmd.Context())
+			docCh, err := col.GetAllDocIDs(cmd.Context())
 			if err != nil {
 				return err
 			}
-			for docKey := range docCh {
-				results := &http.DocKeyResult{
-					Key: docKey.Key.String(),
+			for result := range docCh {
+				res := &http.DocIDResult{
+					ID: result.ID.String(),
 				}
-				if docKey.Err != nil {
-					results.Error = docKey.Err.Error()
+				if result.Err != nil {
+					res.Error = result.Err.Error()
 				}
-				if err := writeJSON(cmd, results); err != nil {
+				if err := writeJSON(cmd, res); err != nil {
 					return err
 				}
 			}

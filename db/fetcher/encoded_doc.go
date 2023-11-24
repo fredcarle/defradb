@@ -103,7 +103,7 @@ func (encdoc *encodedDocument) Reset() {
 
 // Decode returns a properly decoded document object
 func Decode(encdoc EncodedDocument) (*client.Document, error) {
-	key, err := client.NewDocKeyFromString(string(encdoc.Key()))
+	key, err := client.NewDocIDFromString(string(encdoc.Key()))
 	if err != nil {
 		return nil, err
 	}

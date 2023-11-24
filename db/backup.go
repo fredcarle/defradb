@@ -189,13 +189,13 @@ func (db *db) basicExport(ctx context.Context, txn datastore.Txn, config *client
 			return err
 		}
 		colTxn := col.WithTxn(txn)
-		keysCh, err := colTxn.GetAllDocKeys(ctx)
+		docIDChan, err := colTxn.GetAllDocIDs(ctx)
 		if err != nil {
 			return err
 		}
 
 		firstDoc := true
-		for key := range keysCh {
+		for result := range docIDChan {
 			if firstDoc {
 				firstDoc = false
 			} else {
@@ -205,7 +205,7 @@ func (db *db) basicExport(ctx context.Context, txn datastore.Txn, config *client
 					return err
 				}
 			}
-			doc, err := colTxn.Get(ctx, key.Key, false)
+			doc, err := colTxn.Get(ctx, result.ID, false)
 			if err != nil {
 				return err
 			}
@@ -234,11 +234,11 @@ func (db *db) basicExport(ctx context.Context, txn datastore.Txn, config *client
 							if err != nil {
 								return NewErrFailedToGetCollection(field.Schema, err)
 							}
-							foreignDocKey, err := client.NewDocKeyFromString(foreignKey.(string))
+							foreignDocID, err := client.NewDocIDFromString(foreignKey.(string))
 							if err != nil {
 								return err
 							}
-							foreignDoc, err := foreignCol.Get(ctx, foreignDocKey, false)
+							foreignDoc, err := foreignCol.Get(ctx, foreignDocID, false)
 							if err != nil {
 								err := doc.Set(field.Name+request.RelatedObjectID, nil)
 								if err != nil {
@@ -251,7 +251,7 @@ func (db *db) basicExport(ctx context.Context, txn datastore.Txn, config *client
 								}
 
 								delete(oldForeignDoc, request.KeyFieldName)
-								if foreignDoc.Key().String() == foreignDocKey.String() {
+								if foreignDoc.Key().String() == foreignDocID.String() {
 									delete(oldForeignDoc, field.Name+request.RelatedObjectID)
 								}
 

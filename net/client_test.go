@@ -39,7 +39,7 @@ func TestPushlogWithDialFailure(t *testing.T) {
 	)
 
 	err = n.server.pushLog(ctx, events.Update{
-		DocKey:   doc.Key().String(),
+		DocID:    doc.Key().String(),
 		Cid:      cid,
 		SchemaID: "test",
 		Block:    &EmptyNode{},
@@ -59,7 +59,7 @@ func TestPushlogWithInvalidPeerID(t *testing.T) {
 	require.NoError(t, err)
 
 	err = n.server.pushLog(ctx, events.Update{
-		DocKey:   doc.Key().String(),
+		DocID:    doc.Key().String(),
 		Cid:      cid,
 		SchemaID: "test",
 		Block:    &EmptyNode{},
@@ -105,7 +105,7 @@ func TestPushlogW_WithValidPeerID_NoError(t *testing.T) {
 	require.NoError(t, err)
 
 	err = n1.server.pushLog(ctx, events.Update{
-		DocKey:   doc.Key().String(),
+		DocID:    doc.Key().String(),
 		Cid:      cid,
 		SchemaID: col.SchemaID(),
 		Block:    &EmptyNode{},

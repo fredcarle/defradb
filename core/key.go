@@ -66,7 +66,7 @@ type Key interface {
 type DataStoreKey struct {
 	CollectionID string
 	InstanceType InstanceType
-	DocKey       string
+	DocID        string
 	FieldId      string
 }
 
@@ -86,13 +86,13 @@ var _ Key = (*IndexDataStoreKey)(nil)
 
 type PrimaryDataStoreKey struct {
 	CollectionId string
-	DocKey       string
+	DocID        string
 }
 
 var _ Key = (*PrimaryDataStoreKey)(nil)
 
 type HeadStoreKey struct {
-	DocKey  string
+	DocID   string
 	FieldId string //can be 'C'
 	Cid     cid.Cid
 }
@@ -185,7 +185,7 @@ var _ Key = (*ReplicatorKey)(nil)
 // splitting the input using '/' as a field deliminator.  It assumes
 // that the input string is in the following format:
 //
-// /[CollectionId]/[InstanceType]/[DocKey]/[FieldId]
+// /[CollectionId]/[InstanceType]/[DocID]/[FieldId]
 //
 // Any properties before the above (assuming a '/' deliminator) are ignored
 func NewDataStoreKey(key string) (DataStoreKey, error) {
@@ -205,7 +205,7 @@ func NewDataStoreKey(key string) (DataStoreKey, error) {
 
 	dataStoreKey.CollectionID = elements[0]
 	dataStoreKey.InstanceType = InstanceType(elements[1])
-	dataStoreKey.DocKey = elements[2]
+	dataStoreKey.DocID = elements[2]
 	if numberOfElements == 4 {
 		dataStoreKey.FieldId = elements[3]
 	}
@@ -221,9 +221,9 @@ func MustNewDataStoreKey(key string) DataStoreKey {
 	return dsKey
 }
 
-func DataStoreKeyFromDocKey(dockey client.DocKey) DataStoreKey {
+func DataStoreKeyFromDocID(docID client.DocID) DataStoreKey {
 	return DataStoreKey{
-		DocKey: dockey.String(),
+		DocID: docID.String(),
 	}
 }
 
@@ -231,7 +231,7 @@ func DataStoreKeyFromDocKey(dockey client.DocKey) DataStoreKey {
 // splitting the input using '/' as a field deliminator.  It assumes
 // that the input string is in the following format:
 //
-// /[DocKey]/[FieldId]/[Cid]
+// /[DocID]/[FieldId]/[Cid]
 //
 // Any properties before the above are ignored
 func NewHeadStoreKey(key string) (HeadStoreKey, error) {
@@ -247,7 +247,7 @@ func NewHeadStoreKey(key string) (HeadStoreKey, error) {
 
 	return HeadStoreKey{
 		// elements[0] is empty (key has leading '/')
-		DocKey:  elements[1],
+		DocID:   elements[1],
 		FieldId: elements[2],
 		Cid:     cid,
 	}, nil
@@ -372,15 +372,15 @@ func (k DataStoreKey) WithDeletedFlag() DataStoreKey {
 	return newKey
 }
 
-func (k DataStoreKey) WithDocKey(docKey string) DataStoreKey {
+func (k DataStoreKey) WithDocID(docID string) DataStoreKey {
 	newKey := k
-	newKey.DocKey = docKey
+	newKey.DocID = docID
 	return newKey
 }
 
 func (k DataStoreKey) WithInstanceInfo(key DataStoreKey) DataStoreKey {
 	newKey := k
-	newKey.DocKey = key.DocKey
+	newKey.DocID = key.DocID
 	newKey.FieldId = key.FieldId
 	newKey.InstanceType = key.InstanceType
 	return newKey
@@ -394,14 +394,14 @@ func (k DataStoreKey) WithFieldId(fieldId string) DataStoreKey {
 
 func (k DataStoreKey) ToHeadStoreKey() HeadStoreKey {
 	return HeadStoreKey{
-		DocKey:  k.DocKey,
+		DocID:   k.DocID,
 		FieldId: k.FieldId,
 	}
 }
 
-func (k HeadStoreKey) WithDocKey(docKey string) HeadStoreKey {
+func (k HeadStoreKey) WithDocID(docID string) HeadStoreKey {
 	newKey := k
-	newKey.DocKey = docKey
+	newKey.DocID = docID
 	return newKey
 }
 
@@ -426,8 +426,8 @@ func (k DataStoreKey) ToString() string {
 	if k.InstanceType != "" {
 		result = result + "/" + string(k.InstanceType)
 	}
-	if k.DocKey != "" {
-		result = result + "/" + k.DocKey
+	if k.DocID != "" {
+		result = result + "/" + k.DocID
 	}
 	if k.FieldId != "" {
 		result = result + "/" + k.FieldId
@@ -446,7 +446,7 @@ func (k DataStoreKey) ToDS() ds.Key {
 
 func (k DataStoreKey) Equal(other DataStoreKey) bool {
 	return k.CollectionID == other.CollectionID &&
-		k.DocKey == other.DocKey &&
+		k.DocID == other.DocID &&
 		k.FieldId == other.FieldId &&
 		k.InstanceType == other.InstanceType
 }
@@ -454,7 +454,7 @@ func (k DataStoreKey) Equal(other DataStoreKey) bool {
 func (k DataStoreKey) ToPrimaryDataStoreKey() PrimaryDataStoreKey {
 	return PrimaryDataStoreKey{
 		CollectionId: k.CollectionID,
-		DocKey:       k.DocKey,
+		DocID:        k.DocID,
 	}
 }
 
@@ -564,7 +564,7 @@ func (k IndexDataStoreKey) Equal(other IndexDataStoreKey) bool {
 func (k PrimaryDataStoreKey) ToDataStoreKey() DataStoreKey {
 	return DataStoreKey{
 		CollectionID: k.CollectionId,
-		DocKey:       k.DocKey,
+		DocID:        k.DocID,
 	}
 }
 
@@ -583,8 +583,8 @@ func (k PrimaryDataStoreKey) ToString() string {
 		result = result + "/" + k.CollectionId
 	}
 	result = result + PRIMARY_KEY
-	if k.DocKey != "" {
-		result = result + "/" + k.DocKey
+	if k.DocID != "" {
+		result = result + "/" + k.DocID
 	}
 
 	return result
@@ -776,8 +776,8 @@ func (k ReplicatorKey) ToDS() ds.Key {
 func (k HeadStoreKey) ToString() string {
 	var result string
 
-	if k.DocKey != "" {
-		result = result + "/" + k.DocKey
+	if k.DocID != "" {
+		result = result + "/" + k.DocID
 	}
 	if k.FieldId != "" {
 		result = result + "/" + k.FieldId
@@ -807,8 +807,8 @@ func (k DataStoreKey) PrefixEnd() DataStoreKey {
 		newKey.FieldId = string(bytesPrefixEnd([]byte(k.FieldId)))
 		return newKey
 	}
-	if k.DocKey != "" {
-		newKey.DocKey = string(bytesPrefixEnd([]byte(k.DocKey)))
+	if k.DocID != "" {
+		newKey.DocID = string(bytesPrefixEnd([]byte(k.DocID)))
 		return newKey
 	}
 	if k.InstanceType != "" {

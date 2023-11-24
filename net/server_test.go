@@ -81,11 +81,11 @@ func TestNewServerWithCollectionSubscribed(t *testing.T) {
 	require.NoError(t, err)
 }
 
-type mockDBDockeysError struct {
+type mockDBDocIDsError struct {
 	client.DB
 }
 
-func (mDB *mockDBDockeysError) GetAllCollections(context.Context) ([]client.Collection, error) {
+func (mDB *mockDBDocIDsError) GetAllCollections(context.Context) ([]client.Collection, error) {
 	return []client.Collection{
 		&mockCollection{},
 	}, nil
@@ -98,11 +98,11 @@ type mockCollection struct {
 func (mCol *mockCollection) SchemaID() string {
 	return "mockColID"
 }
-func (mCol *mockCollection) GetAllDocKeys(ctx context.Context) (<-chan client.DocKeysResult, error) {
+func (mCol *mockCollection) GetAllDocIDs(ctx context.Context) (<-chan client.DocIDsResult, error) {
 	return nil, mockError
 }
 
-func TestNewServerWithGetAllDockeysError(t *testing.T) {
+func TestNewServerWithGetAllDocIDsError(t *testing.T) {
 	ctx := context.Background()
 	db, n := newTestNode(ctx, t)
 
@@ -112,7 +112,7 @@ func TestNewServerWithGetAllDockeysError(t *testing.T) {
 	}`)
 	require.NoError(t, err)
 
-	mDB := mockDBDockeysError{db}
+	mDB := mockDBDocIDsError{db}
 
 	_, err = newServer(n.Peer, &mDB)
 	require.ErrorIs(t, err, mockError)
@@ -272,7 +272,7 @@ func TestPushLog(t *testing.T) {
 
 	_, err = n.server.PushLog(ctx, &net_pb.PushLogRequest{
 		Body: &net_pb.PushLogRequest_Body{
-			DocKey:   []byte(doc.Key().String()),
+			DocID:    []byte(doc.Key().String()),
 			Cid:      cid.Bytes(),
 			SchemaID: []byte(col.SchemaID()),
 			Creator:  n.PeerID().String(),

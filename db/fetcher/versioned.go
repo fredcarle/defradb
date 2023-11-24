@@ -145,19 +145,19 @@ func (vf *VersionedFetcher) Start(ctx context.Context, spans core.Spans) error {
 	}
 
 	// For the VersionedFetcher, the spans needs to be in the format
-	// Span{Start: DocKey, End: CID}
+	// Span{Start: DocID, End: CID}
 	dk := spans.Value[0].Start()
 	cidRaw := spans.Value[0].End()
-	if dk.DocKey == "" {
-		return client.NewErrUninitializeProperty("Spans", "DocKey")
-	} else if cidRaw.DocKey == "" { // todo: dont abuse DataStoreKey/Span like this!
+	if dk.DocID == "" {
+		return client.NewErrUninitializeProperty("Spans", "DocID")
+	} else if cidRaw.DocID == "" { // todo: dont abuse DataStoreKey/Span like this!
 		return client.NewErrUninitializeProperty("Spans", "CID")
 	}
 
 	// decode cidRaw from core.Key to cid.Cid
 	// need to remove '/' prefix from the core.Key
 
-	c, err := cid.Decode(cidRaw.DocKey)
+	c, err := cid.Decode(cidRaw.DocID)
 	if err != nil {
 		return NewErrFailedToDecodeCIDForVFetcher(err)
 	}
@@ -181,7 +181,7 @@ func (vf *VersionedFetcher) Rootstore() ds.Datastore {
 // Start a fetcher with the needed info (cid embedded in a span)
 
 /*
-1. Init with DocKey (VersionedFetched is scoped to a single doc)
+1. Init with DocID (VersionedFetched is scoped to a single doc)
 2. - Create transient stores (head, data, block)
 3. Start with a given Txn and CID span set (length 1 for now)
 4. call traverse with the target cid
@@ -259,8 +259,8 @@ func (vf *VersionedFetcher) seekNext(c cid.Cid, topParent bool) error {
 	// check if cid block exists in the global store, handle err
 
 	// @todo: Find an effecient way to determine if a CID is a member of a
-	// DocKey State graph
-	// @body: We could possibly append the DocKey to the CID either as a
+	// DocID State graph
+	// @body: We could possibly append the DocID to the CID either as a
 	// child key, or an instance on the CID key.
 
 	hasLocalBlock, err := vf.store.DAGstore().Has(vf.ctx, c)
@@ -431,7 +431,7 @@ func (vf *VersionedFetcher) Close() error {
 }
 
 // NewVersionedSpan creates a new VersionedSpan from a DataStoreKey and a version CID.
-func NewVersionedSpan(dockey core.DataStoreKey, version cid.Cid) core.Spans {
+func NewVersionedSpan(docID core.DataStoreKey, version cid.Cid) core.Spans {
 	// Todo: Dont abuse DataStoreKey for version cid!
-	return core.NewSpans(core.NewSpan(dockey, core.DataStoreKey{DocKey: version.String()}))
+	return core.NewSpans(core.NewSpan(docID, core.DataStoreKey{DocID: version.String()}))
 }

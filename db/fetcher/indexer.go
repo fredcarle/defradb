@@ -131,7 +131,7 @@ func (f *IndexFetcher) FetchNext(ctx context.Context) (EncodedDocument, ExecInfo
 		f.execInfo.FieldsFetched++
 
 		if f.docFetcher != nil && len(f.docFields) > 0 {
-			targetKey := base.MakeDocKey(f.col.Description(), string(f.doc.key))
+			targetKey := base.MakeDocID(f.col.Description(), string(f.doc.key))
 			spans := core.NewSpans(core.NewSpan(targetKey, targetKey.PrefixEnd()))
 			err = f.docFetcher.Start(ctx, spans)
 			if err != nil {

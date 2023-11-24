@@ -42,7 +42,7 @@ func TestVersionFull(t *testing.T) {
 	assert.NoError(t, err)
 	t.Log(buf.String())
 	assert.Contains(t, buf.String(), "* HTTP API")
-	assert.Contains(t, buf.String(), "* DocKey versions")
+	assert.Contains(t, buf.String(), "* DocID versions")
 	assert.Contains(t, buf.String(), "* P2P multicodec")
 }
 
@@ -62,7 +62,7 @@ func TestVersionJSON(t *testing.T) {
 		"commitdate": "",
 		"go": "",
 		"httpapi": "v0",
-		"dockeyversions": "1",
+		"docIDversions": "1",
 		"netprotocol": "/defra/0.0.1"
 	}`)
 }
@@ -83,7 +83,7 @@ func TestVersionJSONFull(t *testing.T) {
 		"commitdate": "",
 		"go": "",
 		"httpapi": "v0",
-		"dockeyversions": "1",
+		"docIDversions": "1",
 		"netprotocol": "/defra/0.0.1"
 	}`)
 }

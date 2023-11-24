@@ -24,8 +24,8 @@ import (
 
 // DeleteWith deletes a target document.
 //
-// Target can be a Filter statement, a single docKey, a single document,
-// an array of docKeys, or an array of documents.
+// Target can be a Filter statement, a single docID, a single document,
+// an array of docIDs, or an array of documents.
 //
 // If you want more type safety, use the respective typed versions of Delete.
 // Eg: DeleteWithFilter or DeleteWithKey
@@ -36,19 +36,19 @@ func (c *collection) DeleteWith(
 	switch t := target.(type) {
 	case string, map[string]any, *request.Filter:
 		return c.DeleteWithFilter(ctx, t)
-	case client.DocKey:
+	case client.DocID:
 		return c.DeleteWithKey(ctx, t)
-	case []client.DocKey:
+	case []client.DocID:
 		return c.DeleteWithKeys(ctx, t)
 	default:
 		return nil, client.ErrInvalidDeleteTarget
 	}
 }
 
-// DeleteWithKey deletes using a DocKey to target a single document for delete.
+// DeleteWithKey deletes using a DocID to target a single document for delete.
 func (c *collection) DeleteWithKey(
 	ctx context.Context,
-	key client.DocKey,
+	key client.DocID,
 ) (*client.DeleteResult, error) {
 	txn, err := c.getTxn(ctx, false)
 	if err != nil {
@@ -57,7 +57,7 @@ func (c *collection) DeleteWithKey(
 
 	defer c.discardImplicitTxn(ctx, txn)
 
-	dsKey := c.getPrimaryKeyFromDocKey(key)
+	dsKey := c.getPrimaryKeyFromDocID(key)
 	res, err := c.deleteWithKey(ctx, txn, dsKey, client.Deleted)
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (c *collection) DeleteWithKey(
 // DeleteWithKeys is the same as DeleteWithKey but accepts multiple keys as a slice.
 func (c *collection) DeleteWithKeys(
 	ctx context.Context,
-	keys []client.DocKey,
+	keys []client.DocID,
 ) (*client.DeleteResult, error) {
 	txn, err := c.getTxn(ctx, false)
 	if err != nil {
@@ -112,7 +112,7 @@ func (c *collection) deleteWithKey(
 	key core.PrimaryDataStoreKey,
 	status client.DocumentStatus,
 ) (*client.DeleteResult, error) {
-	// Check the docKey we have been given to delete with actually has a corresponding
+	// Check the docID we have been given to delete with actually has a corresponding
 	//  document (i.e. document actually exists in the collection).
 	err := c.applyDelete(ctx, txn, key)
 	if err != nil {
@@ -121,8 +121,8 @@ func (c *collection) deleteWithKey(
 
 	// Upon successfull deletion, record a summary.
 	results := &client.DeleteResult{
-		Count:   1,
-		DocKeys: []string{key.DocKey},
+		Count:  1,
+		DocIDs: []string{key.DocID},
 	}
 
 	return results, nil
@@ -131,15 +131,15 @@ func (c *collection) deleteWithKey(
 func (c *collection) deleteWithKeys(
 	ctx context.Context,
 	txn datastore.Txn,
-	keys []client.DocKey,
+	keys []client.DocID,
 	status client.DocumentStatus,
 ) (*client.DeleteResult, error) {
 	results := &client.DeleteResult{
-		DocKeys: make([]string, 0),
+		DocIDs: make([]string, 0),
 	}
 
 	for _, key := range keys {
-		dsKey := c.getPrimaryKeyFromDocKey(key)
+		dsKey := c.getPrimaryKeyFromDocID(key)
 
 		// Apply the function that will perform the full deletion of this document.
 		err := c.applyDelete(ctx, txn, dsKey)
@@ -148,11 +148,11 @@ func (c *collection) deleteWithKeys(
 		}
 
 		// Add this deleted key to our list.
-		results.DocKeys = append(results.DocKeys, key.String())
+		results.DocIDs = append(results.DocIDs, key.String())
 	}
 
 	// Upon successfull deletion, record a summary of how many we deleted.
-	results.Count = int64(len(results.DocKeys))
+	results.Count = int64(len(results.DocIDs))
 
 	return results, nil
 }
@@ -186,7 +186,7 @@ func (c *collection) deleteWithFilter(
 	}()
 
 	results := &client.DeleteResult{
-		DocKeys: make([]string, 0),
+		DocIDs: make([]string, 0),
 	}
 
 	// Keep looping until results from the selection plan have been iterated through.
@@ -202,13 +202,13 @@ func (c *collection) deleteWithFilter(
 		}
 
 		doc := selectionPlan.Value()
-		// Extract the dockey in the string format from the document value.
-		docKey := doc.GetKey()
+		// Extract the docID in the string format from the document value.
+		docID := doc.GetKey()
 
-		// Convert from string to client.DocKey.
+		// Convert from string to client.DocID.
 		key := core.PrimaryDataStoreKey{
 			CollectionId: fmt.Sprint(c.ID()),
-			DocKey:       docKey,
+			DocID:        docID,
 		}
 
 		// Delete the document that is associated with this key we got from the filter.
@@ -218,10 +218,10 @@ func (c *collection) deleteWithFilter(
 		}
 
 		// Add key of successfully deleted document to our list.
-		results.DocKeys = append(results.DocKeys, docKey)
+		results.DocIDs = append(results.DocIDs, docID)
 	}
 
-	results.Count = int64(len(results.DocKeys))
+	results.Count = int64(len(results.DocIDs))
 
 	return results, nil
 }
@@ -239,7 +239,7 @@ func (c *collection) applyDelete(
 		return client.ErrDocumentNotFound
 	}
 	if isDeleted {
-		return NewErrDocumentDeleted(key.DocKey)
+		return NewErrDocumentDeleted(key.DocID)
 	}
 
 	dsKey := key.ToDataStoreKey()
@@ -279,7 +279,7 @@ func (c *collection) applyDelete(
 			func() {
 				c.db.events.Updates.Value().Publish(
 					events.Update{
-						DocKey:   key.DocKey,
+						DocID:    key.DocID,
 						Cid:      headNode.Cid(),
 						SchemaID: c.Schema().SchemaID,
 						Block:    headNode,

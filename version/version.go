@@ -41,7 +41,7 @@ type defraVersion struct {
 	GoInfo     string `json:"go"`
 
 	VersionHTTPAPI string `json:"httpapi"`
-	DocKeyVersions string `json:"dockeyversions"`
+	DocIDVersions  string `json:"docIDversions"`
 	NetProtocol    string `json:"netprotocol"`
 }
 
@@ -55,13 +55,13 @@ func NewDefraVersion() (defraVersion, error) {
 		VersionHTTPAPI: http.Version,
 		NetProtocol:    string(net.Protocol),
 	}
-	var docKeyVersions []string
-	for k, v := range client.ValidDocKeyVersions {
+	var docIDVersions []string
+	for k, v := range client.ValidDocIDVersions {
 		if v {
-			docKeyVersions = append(docKeyVersions, fmt.Sprintf("%x", k))
+			docIDVersions = append(docIDVersions, fmt.Sprintf("%x", k))
 		}
 	}
-	dv.DocKeyVersions = strings.Join(docKeyVersions, ",")
+	dv.DocIDVersions = strings.Join(docIDVersions, ",")
 	return dv, nil
 }
 
@@ -88,14 +88,14 @@ func (dv *defraVersion) StringFull() string {
 		`defradb %s (%s %s)
 * HTTP API: %s
 * P2P multicodec: %s
-* DocKey versions: %s
+* DocID versions: %s
 * Go: %s`,
 		dv.Release,
 		commitHash,
 		dv.CommitDate,
 		dv.VersionHTTPAPI,
 		dv.NetProtocol,
-		dv.DocKeyVersions,
+		dv.DocIDVersions,
 		dv.GoInfo,
 	)
 }

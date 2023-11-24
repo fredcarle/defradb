@@ -19,7 +19,7 @@ const errInvalidLensConfig = "invalid lens configuration"
 var (
 	ErrNoDocOrFile         = errors.New("document or file must be defined")
 	ErrInvalidDocument     = errors.New("invalid document")
-	ErrNoDocKeyOrFilter    = errors.New("document key or filter must be defined")
+	ErrNoDocIDOrFilter     = errors.New("document key or filter must be defined")
 	ErrInvalidExportFormat = errors.New("invalid export format")
 	ErrNoLensConfig        = errors.New("lens config cannot be empty")
 	ErrInvalidLensConfig   = errors.New("invalid lens configuration")

@@ -473,7 +473,7 @@ func TestPushToReplicator_SingleDocumentNoPeer_FailedToReplicateLogError(t *test
 	err = col.Create(ctx, doc)
 	require.NoError(t, err)
 
-	keysCh, err := col.GetAllDocKeys(ctx)
+	keysCh, err := col.GetAllDocIDs(ctx)
 	require.NoError(t, err)
 
 	txn, err := db.NewTxn(ctx, true)
@@ -771,14 +771,14 @@ func TestHandleDocCreateLog_NoError(t *testing.T) {
 	delta := &crdt.CompositeDAGDelta{
 		SchemaVersionID: col.Schema().VersionID,
 		Priority:        1,
-		DocKey:          doc.Key().Bytes(),
+		DocID:           doc.Key().Bytes(),
 	}
 
 	node, err := makeNode(delta, []cid.Cid{docCid})
 	require.NoError(t, err)
 
 	err = n.handleDocCreateLog(events.Update{
-		DocKey:   doc.Key().String(),
+		DocID:    doc.Key().String(),
 		Cid:      docCid,
 		SchemaID: col.SchemaID(),
 		Block:    node,
@@ -787,14 +787,14 @@ func TestHandleDocCreateLog_NoError(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestHandleDocCreateLog_WithInvalidDockey_NoError(t *testing.T) {
+func TestHandleDocCreateLog_WithInvalidDocID_NoError(t *testing.T) {
 	ctx := context.Background()
 	_, n := newTestNode(ctx, t)
 
 	err := n.handleDocCreateLog(events.Update{
-		DocKey: "some-invalid-key",
+		DocID: "some-invalid-key",
 	})
-	require.ErrorContains(t, err, "failed to get DocKey from broadcast message: selected encoding not supported")
+	require.ErrorContains(t, err, "failed to get DocID from broadcast message: selected encoding not supported")
 }
 
 func TestHandleDocCreateLog_WithExistingTopic_TopicExistsError(t *testing.T) {
@@ -820,7 +820,7 @@ func TestHandleDocCreateLog_WithExistingTopic_TopicExistsError(t *testing.T) {
 	require.NoError(t, err)
 
 	err = n.handleDocCreateLog(events.Update{
-		DocKey:   doc.Key().String(),
+		DocID:    doc.Key().String(),
 		SchemaID: col.SchemaID(),
 	})
 	require.ErrorContains(t, err, "topic already exists")
@@ -851,14 +851,14 @@ func TestHandleDocUpdateLog_NoError(t *testing.T) {
 	delta := &crdt.CompositeDAGDelta{
 		SchemaVersionID: col.Schema().VersionID,
 		Priority:        1,
-		DocKey:          doc.Key().Bytes(),
+		DocID:           doc.Key().Bytes(),
 	}
 
 	node, err := makeNode(delta, []cid.Cid{docCid})
 	require.NoError(t, err)
 
 	err = n.handleDocUpdateLog(events.Update{
-		DocKey:   doc.Key().String(),
+		DocID:    doc.Key().String(),
 		Cid:      docCid,
 		SchemaID: col.SchemaID(),
 		Block:    node,
@@ -867,17 +867,17 @@ func TestHandleDocUpdateLog_NoError(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestHandleDoUpdateLog_WithInvalidDockey_NoError(t *testing.T) {
+func TestHandleDoUpdateLog_WithInvalidDocID_NoError(t *testing.T) {
 	ctx := context.Background()
 	_, n := newTestNode(ctx, t)
 
 	err := n.handleDocUpdateLog(events.Update{
-		DocKey: "some-invalid-key",
+		DocID: "some-invalid-key",
 	})
-	require.ErrorContains(t, err, "failed to get DocKey from broadcast message: selected encoding not supported")
+	require.ErrorContains(t, err, "failed to get DocID from broadcast message: selected encoding not supported")
 }
 
-func TestHandleDocUpdateLog_WithExistingDockeyTopic_TopicExistsError(t *testing.T) {
+func TestHandleDocUpdateLog_WithExistingDocIDTopic_TopicExistsError(t *testing.T) {
 	ctx := context.Background()
 	db, n := newTestNode(ctx, t)
 
@@ -902,7 +902,7 @@ func TestHandleDocUpdateLog_WithExistingDockeyTopic_TopicExistsError(t *testing.
 	delta := &crdt.CompositeDAGDelta{
 		SchemaVersionID: col.Schema().VersionID,
 		Priority:        1,
-		DocKey:          doc.Key().Bytes(),
+		DocID:           doc.Key().Bytes(),
 	}
 
 	node, err := makeNode(delta, []cid.Cid{docCid})
@@ -912,7 +912,7 @@ func TestHandleDocUpdateLog_WithExistingDockeyTopic_TopicExistsError(t *testing.
 	require.NoError(t, err)
 
 	err = n.handleDocUpdateLog(events.Update{
-		DocKey:   doc.Key().String(),
+		DocID:    doc.Key().String(),
 		Cid:      docCid,
 		SchemaID: col.SchemaID(),
 		Block:    node,
@@ -945,7 +945,7 @@ func TestHandleDocUpdateLog_WithExistingSchemaTopic_TopicExistsError(t *testing.
 	delta := &crdt.CompositeDAGDelta{
 		SchemaVersionID: col.Schema().VersionID,
 		Priority:        1,
-		DocKey:          doc.Key().Bytes(),
+		DocID:           doc.Key().Bytes(),
 	}
 
 	node, err := makeNode(delta, []cid.Cid{docCid})
@@ -955,7 +955,7 @@ func TestHandleDocUpdateLog_WithExistingSchemaTopic_TopicExistsError(t *testing.
 	require.NoError(t, err)
 
 	err = n.handleDocUpdateLog(events.Update{
-		DocKey:   doc.Key().String(),
+		DocID:    doc.Key().String(),
 		Cid:      docCid,
 		SchemaID: col.SchemaID(),
 		Block:    node,
@@ -995,14 +995,14 @@ func TestPushLogToReplicator_WithReplicator_FailedPushingLogError(t *testing.T) 
 	delta := &crdt.CompositeDAGDelta{
 		SchemaVersionID: col.Schema().VersionID,
 		Priority:        1,
-		DocKey:          doc.Key().Bytes(),
+		DocID:           doc.Key().Bytes(),
 	}
 
 	node, err := makeNode(delta, []cid.Cid{docCid})
 	require.NoError(t, err)
 
 	n.pushLogToReplicators(ctx, events.Update{
-		DocKey:   doc.Key().String(),
+		DocID:    doc.Key().String(),
 		Cid:      docCid,
 		SchemaID: col.SchemaID(),
 		Block:    node,

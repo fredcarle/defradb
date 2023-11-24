@@ -22,7 +22,7 @@ const (
 var (
 	ErrDeltaMissingSchemaVersionID         = errors.New("commit Delta missing schema version id")
 	ErrDeltaMissingPriority                = errors.New("commit Delta missing priority key")
-	ErrDeltaMissingDockey                  = errors.New("commit Delta missing dockey")
+	ErrDeltaMissingDocID                   = errors.New("commit Delta missing docID")
 	ErrDeltaMissingFieldName               = errors.New("commit Delta missing field name")
 	ErrFailedToFindScanNode                = errors.New("failed to find original scan node in plan graph")
 	ErrMissingQueryOrMutation              = errors.New("request is missing query or mutation operation statements")

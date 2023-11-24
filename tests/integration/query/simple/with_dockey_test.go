@@ -16,7 +16,7 @@ import (
 	testUtils "github.com/sourcenetwork/defradb/tests/integration"
 )
 
-func TestQuerySimpleWithDocKeyFilter(t *testing.T) {
+func TestQuerySimpleWithDocIDFilter(t *testing.T) {
 	tests := []testUtils.RequestTestCase{
 		{
 			Description: "Simple query with basic filter (key by docID arg)",

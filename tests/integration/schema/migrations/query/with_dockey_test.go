@@ -21,7 +21,7 @@ import (
 )
 
 // This test asserts that spans are being passed correctly through the new Lens fetcher.
-func TestSchemaMigrationQueryByDocKey(t *testing.T) {
+func TestSchemaMigrationQueryByDocID(t *testing.T) {
 	test := testUtils.TestCase{
 		Description: "Test schema migration, query by key",
 		Actions: []any{
@@ -99,7 +99,7 @@ func TestSchemaMigrationQueryByDocKey(t *testing.T) {
 //
 // At the time of writing, the lens pool size is hardcoded to 5, so we should test with 6
 // documents/queries, if the size changes so should this test.
-func TestSchemaMigrationQueryMultipleQueriesByDocKey(t *testing.T) {
+func TestSchemaMigrationQueryMultipleQueriesByDocID(t *testing.T) {
 	test := testUtils.TestCase{
 		Description: "Test schema migration, multiple queries by key",
 		Actions: []any{

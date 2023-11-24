@@ -27,7 +27,7 @@ type Document struct {
 	unknownFields protoimpl.UnknownFields
 
 	// ID of the document.
-	DocKey []byte `protobuf:"bytes,1,opt,name=docKey,proto3" json:"docKey,omitempty"`
+	DocID []byte `protobuf:"bytes,1,opt,name=docID,proto3" json:"docID,omitempty"`
 	// head of the log.
 	Head []byte `protobuf:"bytes,4,opt,name=head,proto3" json:"head,omitempty"`
 }
@@ -64,9 +64,9 @@ func (*Document) Descriptor() ([]byte, []int) {
 	return file_net_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Document) GetDocKey() []byte {
+func (x *Document) GetDocID() []byte {
 	if x != nil {
-		return x.DocKey
+		return x.DocID
 	}
 	return nil
 }
@@ -521,8 +521,8 @@ type PushLogRequest_Body struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// docKey is the DocKey of the document that is affected by the log.
-	DocKey []byte `protobuf:"bytes,1,opt,name=docKey,proto3" json:"docKey,omitempty"`
+	// docID is the DocID of the document that is affected by the log.
+	DocID []byte `protobuf:"bytes,1,opt,name=docID,proto3" json:"docID,omitempty"`
 	// cid is the CID of the composite of the document.
 	Cid []byte `protobuf:"bytes,2,opt,name=cid,proto3" json:"cid,omitempty"`
 	// schemaID is the SchemaID of the collection that the document resides in.
@@ -565,9 +565,9 @@ func (*PushLogRequest_Body) Descriptor() ([]byte, []int) {
 	return file_net_proto_rawDescGZIP(), []int{7, 0}
 }
 
-func (x *PushLogRequest_Body) GetDocKey() []byte {
+func (x *PushLogRequest_Body) GetDocID() []byte {
 	if x != nil {
-		return x.DocKey
+		return x.DocID
 	}
 	return nil
 }

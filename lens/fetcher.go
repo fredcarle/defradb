@@ -277,14 +277,14 @@ func (f *lensedFetcher) updateDataStore(ctx context.Context, original map[string
 		}
 	}
 
-	dockey, ok := original[request.KeyFieldName].(string)
+	docID, ok := original[request.KeyFieldName].(string)
 	if !ok {
 		return core.ErrInvalidKey
 	}
 
 	datastoreKeyBase := core.DataStoreKey{
 		CollectionID: f.col.Description().IDString(),
-		DocKey:       dockey,
+		DocID:        docID,
 		InstanceType: core.ValueKey,
 	}
 

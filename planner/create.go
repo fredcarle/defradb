@@ -101,8 +101,8 @@ func (n *createNode) Next() (bool, error) {
 	n.currentValue = currentValue
 
 	desc := n.collection.Description()
-	docKey := base.MakeDocKey(desc, currentValue.GetKey())
-	n.results.Spans(core.NewSpans(core.NewSpan(docKey, docKey.PrefixEnd())))
+	docID := base.MakeDocID(desc, currentValue.GetKey())
+	n.results.Spans(core.NewSpans(core.NewSpan(docID, docID.PrefixEnd())))
 
 	err := n.results.Init()
 	if err != nil {

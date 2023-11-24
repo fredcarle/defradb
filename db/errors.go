@@ -448,17 +448,17 @@ func NewErrCannotDeleteField(name string, id client.FieldID) error {
 	)
 }
 
-func NewErrDocumentAlreadyExists(dockey string) error {
+func NewErrDocumentAlreadyExists(docID string) error {
 	return errors.New(
 		errDocumentAlreadyExists,
-		errors.NewKV("DocKey", dockey),
+		errors.NewKV("DocID", docID),
 	)
 }
 
-func NewErrDocumentDeleted(dockey string) error {
+func NewErrDocumentDeleted(docID string) error {
 	return errors.New(
 		errDocumentDeleted,
-		errors.NewKV("DocKey", dockey),
+		errors.NewKV("DocID", docID),
 	)
 }
 

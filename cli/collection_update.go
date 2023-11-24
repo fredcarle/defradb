@@ -45,25 +45,25 @@ Example: update by keys
 
 			switch {
 			case len(keys) == 1 && updater != "":
-				docKey, err := client.NewDocKeyFromString(keys[0])
+				docID, err := client.NewDocIDFromString(keys[0])
 				if err != nil {
 					return err
 				}
-				res, err := col.UpdateWithKey(cmd.Context(), docKey, updater)
+				res, err := col.UpdateWithKey(cmd.Context(), docID, updater)
 				if err != nil {
 					return err
 				}
 				return writeJSON(cmd, res)
 			case len(keys) > 1 && updater != "":
-				docKeys := make([]client.DocKey, len(keys))
+				docIDs := make([]client.DocID, len(keys))
 				for i, v := range keys {
-					docKey, err := client.NewDocKeyFromString(v)
+					docID, err := client.NewDocIDFromString(v)
 					if err != nil {
 						return err
 					}
-					docKeys[i] = docKey
+					docIDs[i] = docID
 				}
-				res, err := col.UpdateWithKeys(cmd.Context(), docKeys, updater)
+				res, err := col.UpdateWithKeys(cmd.Context(), docIDs, updater)
 				if err != nil {
 					return err
 				}
@@ -75,11 +75,11 @@ Example: update by keys
 				}
 				return writeJSON(cmd, res)
 			case len(keys) == 1 && len(args) == 1:
-				docKey, err := client.NewDocKeyFromString(keys[0])
+				docID, err := client.NewDocIDFromString(keys[0])
 				if err != nil {
 					return err
 				}
-				doc, err := col.Get(cmd.Context(), docKey, true)
+				doc, err := col.Get(cmd.Context(), docID, true)
 				if err != nil {
 					return err
 				}
@@ -88,7 +88,7 @@ Example: update by keys
 				}
 				return col.Update(cmd.Context(), doc)
 			default:
-				return ErrNoDocKeyOrFilter
+				return ErrNoDocIDOrFilter
 			}
 		},
 	}

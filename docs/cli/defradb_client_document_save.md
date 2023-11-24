@@ -11,7 +11,7 @@ Example:
 		
 
 ```
-defradb client document save --collection <collection> --key <docKey> <document> [flags]
+defradb client document save --collection <collection> --key <docID> <document> [flags]
 ```
 
 ### Options

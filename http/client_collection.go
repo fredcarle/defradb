@@ -64,7 +64,7 @@ func (c *Collection) Create(ctx context.Context, doc *client.Document) error {
 
 	// We must call this here, else the doc key on the given object will not match
 	// that of the document saved in the database
-	err := doc.RemapAliasFieldsAndDockey(c.Schema().Fields)
+	err := doc.RemapAliasFieldsAndDocID(c.Schema().Fields)
 	if err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (c *Collection) CreateMany(ctx context.Context, docs []*client.Document) er
 	for _, doc := range docs {
 		// We must call this here, else the doc key on the given object will not match
 		// that of the document saved in the database
-		err := doc.RemapAliasFieldsAndDockey(c.Schema().Fields)
+		err := doc.RemapAliasFieldsAndDocID(c.Schema().Fields)
 		if err != nil {
 			return err
 		}
@@ -151,8 +151,8 @@ func (c *Collection) Save(ctx context.Context, doc *client.Document) error {
 	return err
 }
 
-func (c *Collection) Delete(ctx context.Context, docKey client.DocKey) (bool, error) {
-	methodURL := c.http.baseURL.JoinPath("collections", c.Description().Name, docKey.String())
+func (c *Collection) Delete(ctx context.Context, docID client.DocID) (bool, error) {
+	methodURL := c.http.baseURL.JoinPath("collections", c.Description().Name, docID.String())
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, methodURL.String(), nil)
 	if err != nil {
@@ -165,8 +165,8 @@ func (c *Collection) Delete(ctx context.Context, docKey client.DocKey) (bool, er
 	return true, nil
 }
 
-func (c *Collection) Exists(ctx context.Context, docKey client.DocKey) (bool, error) {
-	_, err := c.Get(ctx, docKey, false)
+func (c *Collection) Exists(ctx context.Context, docID client.DocID) (bool, error) {
+	_, err := c.Get(ctx, docID, false)
 	if err != nil {
 		return false, err
 	}
@@ -177,9 +177,9 @@ func (c *Collection) UpdateWith(ctx context.Context, target any, updater string)
 	switch t := target.(type) {
 	case string, map[string]any, *request.Filter:
 		return c.UpdateWithFilter(ctx, t, updater)
-	case client.DocKey:
+	case client.DocID:
 		return c.UpdateWithKey(ctx, t, updater)
-	case []client.DocKey:
+	case []client.DocID:
 		return c.UpdateWithKeys(ctx, t, updater)
 	default:
 		return nil, client.ErrInvalidUpdateTarget
@@ -220,7 +220,7 @@ func (c *Collection) UpdateWithFilter(
 
 func (c *Collection) UpdateWithKey(
 	ctx context.Context,
-	key client.DocKey,
+	key client.DocID,
 	updater string,
 ) (*client.UpdateResult, error) {
 	return c.updateWith(ctx, CollectionUpdateRequest{
@@ -231,11 +231,11 @@ func (c *Collection) UpdateWithKey(
 
 func (c *Collection) UpdateWithKeys(
 	ctx context.Context,
-	docKeys []client.DocKey,
+	docIDs []client.DocID,
 	updater string,
 ) (*client.UpdateResult, error) {
 	var keys []string
-	for _, key := range docKeys {
+	for _, key := range docIDs {
 		keys = append(keys, key.String())
 	}
 	return c.updateWith(ctx, CollectionUpdateRequest{
@@ -248,9 +248,9 @@ func (c *Collection) DeleteWith(ctx context.Context, target any) (*client.Delete
 	switch t := target.(type) {
 	case string, map[string]any, *request.Filter:
 		return c.DeleteWithFilter(ctx, t)
-	case client.DocKey:
+	case client.DocID:
 		return c.DeleteWithKey(ctx, t)
-	case []client.DocKey:
+	case []client.DocID:
 		return c.DeleteWithKeys(ctx, t)
 	default:
 		return nil, client.ErrInvalidDeleteTarget
@@ -284,15 +284,15 @@ func (c *Collection) DeleteWithFilter(ctx context.Context, filter any) (*client.
 	})
 }
 
-func (c *Collection) DeleteWithKey(ctx context.Context, docKey client.DocKey) (*client.DeleteResult, error) {
+func (c *Collection) DeleteWithKey(ctx context.Context, docID client.DocID) (*client.DeleteResult, error) {
 	return c.deleteWith(ctx, CollectionDeleteRequest{
-		Key: docKey.String(),
+		Key: docID.String(),
 	})
 }
 
-func (c *Collection) DeleteWithKeys(ctx context.Context, docKeys []client.DocKey) (*client.DeleteResult, error) {
+func (c *Collection) DeleteWithKeys(ctx context.Context, docIDs []client.DocID) (*client.DeleteResult, error) {
 	var keys []string
-	for _, key := range docKeys {
+	for _, key := range docIDs {
 		keys = append(keys, key.String())
 	}
 	return c.deleteWith(ctx, CollectionDeleteRequest{
@@ -300,7 +300,7 @@ func (c *Collection) DeleteWithKeys(ctx context.Context, docKeys []client.DocKey
 	})
 }
 
-func (c *Collection) Get(ctx context.Context, key client.DocKey, showDeleted bool) (*client.Document, error) {
+func (c *Collection) Get(ctx context.Context, key client.DocID, showDeleted bool) (*client.Document, error) {
 	query := url.Values{}
 	if showDeleted {
 		query.Add("show_deleted", "true")
@@ -332,7 +332,7 @@ func (c *Collection) WithTxn(tx datastore.Txn) client.Collection {
 	}
 }
 
-func (c *Collection) GetAllDocKeys(ctx context.Context) (<-chan client.DocKeysResult, error) {
+func (c *Collection) GetAllDocIDs(ctx context.Context) (<-chan client.DocIDsResult, error) {
 	methodURL := c.http.baseURL.JoinPath("collections", c.Description().Name)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, methodURL.String(), nil)
@@ -345,7 +345,7 @@ func (c *Collection) GetAllDocKeys(ctx context.Context) (<-chan client.DocKeysRe
 	if err != nil {
 		return nil, err
 	}
-	docKeyCh := make(chan client.DocKeysResult)
+	docIDCh := make(chan client.DocIDsResult)
 
 	go func() {
 		eventReader := sse.NewReadCloser(res.Body)
@@ -353,32 +353,32 @@ func (c *Collection) GetAllDocKeys(ctx context.Context) (<-chan client.DocKeysRe
 		// and body of the request are already
 		// checked and it cannot be handled properly
 		defer eventReader.Close() //nolint:errcheck
-		defer close(docKeyCh)
+		defer close(docIDCh)
 
 		for {
 			evt, err := eventReader.Next()
 			if err != nil {
 				return
 			}
-			var res DocKeyResult
+			var res DocIDResult
 			if err := json.Unmarshal(evt.Data, &res); err != nil {
 				return
 			}
-			key, err := client.NewDocKeyFromString(res.Key)
+			docID, err := client.NewDocIDFromString(res.ID)
 			if err != nil {
 				return
 			}
-			docKey := client.DocKeysResult{
-				Key: key,
+			docIDRes := client.DocIDsResult{
+				ID: docID,
 			}
 			if res.Error != "" {
-				docKey.Err = fmt.Errorf(res.Error)
+				docIDRes.Err = fmt.Errorf(res.Error)
 			}
-			docKeyCh <- docKey
+			docIDCh <- docIDRes
 		}
 	}()
 
-	return docKeyCh, nil
+	return docIDCh, nil
 }
 
 func (c *Collection) CreateIndex(

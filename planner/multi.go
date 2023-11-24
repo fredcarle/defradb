@@ -211,7 +211,7 @@ func (p *parallelNode) nextAppend(index int, plan appendNode) (bool, error) {
 	}
 
 	// pass the doc key as a reference through the spans interface
-	spans := core.NewSpans(core.NewSpan(core.DataStoreKey{DocKey: key}, core.DataStoreKey{}))
+	spans := core.NewSpans(core.NewSpan(core.DataStoreKey{DocID: key}, core.DataStoreKey{}))
 	plan.Spans(spans)
 	err := plan.Init()
 	if err != nil {

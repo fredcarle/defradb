@@ -20,8 +20,8 @@ import (
 	"github.com/sourcenetwork/defradb/client/request"
 )
 
-// DocKeyFieldIndex is the index of the key field in a document.
-const DocKeyFieldIndex int = 0
+// DocIDFieldIndex is the index of the key field in a document.
+const DocIDFieldIndex int = 0
 
 // DocFields is a slice of fields in a document.
 type DocFields []any
@@ -39,19 +39,19 @@ type Doc struct {
 	SchemaVersionID string
 }
 
-// GetKey returns the DocKey for this document.
+// GetKey returns the DocID for this document.
 //
 // Will panic if the document is empty.
 func (d *Doc) GetKey() string {
-	key, _ := d.Fields[DocKeyFieldIndex].(string)
+	key, _ := d.Fields[DocIDFieldIndex].(string)
 	return key
 }
 
-// SetKey sets the DocKey for this document.
+// SetKey sets the DocID for this document.
 //
 // Will panic if the document has not been initialised with fields.
 func (d *Doc) SetKey(key string) {
-	d.Fields[DocKeyFieldIndex] = key
+	d.Fields[DocIDFieldIndex] = key
 }
 
 // Clone returns a deep copy of this document.

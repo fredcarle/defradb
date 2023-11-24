@@ -377,13 +377,13 @@ func TestNonUnique_IfMultipleCollectionsWithIndexes_StoreIndexWithCollectionID(t
 	require.NoError(f.t, err)
 	f.commitTxn()
 
-	userDocKey := newIndexKeyBuilder(f).Col(usersColName).Field(usersNameFieldName).Doc(userDoc).Build()
-	prodDocKey := newIndexKeyBuilder(f).Col(productsColName).Field(productsCategoryFieldName).Doc(prodDoc).Build()
+	userDocID := newIndexKeyBuilder(f).Col(usersColName).Field(usersNameFieldName).Doc(userDoc).Build()
+	prodDocID := newIndexKeyBuilder(f).Col(productsColName).Field(productsCategoryFieldName).Doc(prodDoc).Build()
 
-	data, err := f.txn.Datastore().Get(f.ctx, userDocKey.ToDS())
+	data, err := f.txn.Datastore().Get(f.ctx, userDocID.ToDS())
 	require.NoError(t, err)
 	assert.Len(t, data, 0)
-	data, err = f.txn.Datastore().Get(f.ctx, prodDocKey.ToDS())
+	data, err = f.txn.Datastore().Get(f.ctx, prodDocID.ToDS())
 	require.NoError(t, err)
 	assert.Len(t, data, 0)
 }
@@ -612,7 +612,7 @@ func TestNonUniqueCreate_IfDatastoreFailsToStoreIndex_ReturnError(t *testing.T) 
 
 	fieldKeyString := core.DataStoreKey{
 		CollectionID: f.users.Description().IDString(),
-	}.WithDocKey(doc.Key().String()).
+	}.WithDocID(doc.Key().String()).
 		WithFieldId("1").
 		WithValueFlag().
 		ToString()

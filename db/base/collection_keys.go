@@ -24,11 +24,11 @@ func MakeCollectionKey(col client.CollectionDescription) core.DataStoreKey {
 	}
 }
 
-// MakeIndexKey generates a key for the target dockey, using the collection/index description
-func MakeDocKey(col client.CollectionDescription, docKey string) core.DataStoreKey {
+// MakeIndexKey generates a key for the target docID, using the collection/index description
+func MakeDocID(col client.CollectionDescription, docID string) core.DataStoreKey {
 	return core.DataStoreKey{
 		CollectionID: col.IDString(),
-		DocKey:       docKey,
+		DocID:        docID,
 	}
 }
 

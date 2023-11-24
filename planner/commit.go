@@ -68,8 +68,8 @@ func (n *dagScanNode) Kind() string {
 
 func (n *dagScanNode) Init() error {
 	if len(n.spans.Value) == 0 {
-		if n.commitSelect.DocKey.HasValue() {
-			key := core.DataStoreKey{}.WithDocKey(n.commitSelect.DocKey.Value())
+		if n.commitSelect.DocID.HasValue() {
+			key := core.DataStoreKey{}.WithDocID(n.commitSelect.DocID.Value())
 
 			if n.commitSelect.FieldID.HasValue() {
 				field := n.commitSelect.FieldID.Value()
@@ -89,9 +89,9 @@ func (n *dagScanNode) Start() error {
 
 // Spans needs to parse the given span set. dagScanNode only
 // cares about the first value in the span set. The value is
-// either a CID or a DocKey.
+// either a CID or a DocID.
 // If its a CID, set the node CID val
-// if its a DocKey, set the node Key val (headset)
+// if its a DocID, set the node Key val (headset)
 func (n *dagScanNode) Spans(spans core.Spans) {
 	if len(spans.Value) == 0 {
 		return
@@ -345,13 +345,13 @@ func (n *dagScanNode) dagBlockToNodeDoc(block blocks.Block) (core.Doc, []*ipld.L
 	n.commitSelect.DocumentMapping.SetFirstOfName(&commit, request.FieldNameFieldName, fieldName)
 	n.commitSelect.DocumentMapping.SetFirstOfName(&commit, request.FieldIDFieldName, fieldID)
 
-	dockey, ok := delta["DocKey"].([]byte)
+	docID, ok := delta["DocID"].([]byte)
 	if !ok {
-		return core.Doc{}, nil, ErrDeltaMissingDockey
+		return core.Doc{}, nil, ErrDeltaMissingDocID
 	}
 
 	n.commitSelect.DocumentMapping.SetFirstOfName(&commit,
-		request.DocID, string(dockey))
+		request.DocID, string(docID))
 
 	collection, err := n.planner.db.GetCollectionByVersionID(n.planner.ctx, schemaVersionId)
 	if err != nil {

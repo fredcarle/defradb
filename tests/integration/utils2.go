@@ -767,7 +767,7 @@ func refreshDocuments(
 			// Just use the collection from the first relevant node, as all will be the same for this
 			// purpose.
 			collection := getNodeCollections(action.NodeID, s.collections)[0][action.CollectionID]
-			if err := doc.RemapAliasFieldsAndDockey(collection.Schema().Fields); err != nil {
+			if err := doc.RemapAliasFieldsAndDocID(collection.Schema().Fields); err != nil {
 				// If an err has been returned, ignore it - it may be expected and if not
 				// the test will fail later anyway
 				continue
@@ -1071,11 +1071,11 @@ func createDocViaGQL(
 		return nil, nil
 	}
 
-	docKeyString := resultantDocs[0]["_docID"].(string)
-	docKey, err := client.NewDocKeyFromString(docKeyString)
+	docIDString := resultantDocs[0]["_docID"].(string)
+	docID, err := client.NewDocIDFromString(docIDString)
 	require.NoError(s.t, err)
 
-	doc, err := collection.Get(s.ctx, docKey, false)
+	doc, err := collection.Get(s.ctx, docID, false)
 	require.NoError(s.t, err)
 
 	return doc, nil

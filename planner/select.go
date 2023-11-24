@@ -167,9 +167,9 @@ func (n *selectNode) Next() (bool, error) {
 		n.execInfo.filterMatches++
 
 		if n.keys.HasValue() {
-			docKey := n.currentValue.GetKey()
+			docID := n.currentValue.GetKey()
 			for _, key := range n.keys.Value() {
-				if docKey == key {
+				if docID == key {
 					return true, nil
 				}
 			}
@@ -255,7 +255,7 @@ func (n *selectNode) initSource() ([]aggregateNode, error) {
 		origScan.filter = n.filter
 		n.filter = nil
 
-		// If we have both a DocKey and a CID, then we need to run
+		// If we have both a DocID and a CID, then we need to run
 		// a TimeTravel (History-Traversing Versioned) query, which means
 		// we need to propagate the values to the underlying VersionedFetcher
 		if n.selectReq.Cid.HasValue() {
@@ -264,21 +264,21 @@ func (n *selectNode) initSource() ([]aggregateNode, error) {
 				return nil, err
 			}
 			spans := fetcher.NewVersionedSpan(
-				core.DataStoreKey{DocKey: n.selectReq.DocKeys.Value()[0]},
+				core.DataStoreKey{DocID: n.selectReq.DocIDs.Value()[0]},
 				c,
 			) // @todo check len
 			origScan.Spans(spans)
-		} else if n.selectReq.DocKeys.HasValue() {
-			// If we *just* have a DocKey(s), run a FindByDocKey(s) optimization
-			// if we have a FindByDockey filter, create a span for it
+		} else if n.selectReq.DocIDs.HasValue() {
+			// If we *just* have a DocID(s), run a FindByDocID(s) optimization
+			// if we have a FindByDocID filter, create a span for it
 			// and propagate it to the scanNode
 			// @todo: When running the optimizer, check if the filter object
 			// contains a _docID equality condition, and upgrade it to a point lookup
 			// instead of a prefix scan + filter via the Primary Index (0), like here:
-			spans := make([]core.Span, len(n.selectReq.DocKeys.Value()))
-			for i, docKey := range n.selectReq.DocKeys.Value() {
-				dockeyIndexKey := base.MakeDocKey(sourcePlan.collection.Description(), docKey)
-				spans[i] = core.NewSpan(dockeyIndexKey, dockeyIndexKey.PrefixEnd())
+			spans := make([]core.Span, len(n.selectReq.DocIDs.Value()))
+			for i, docID := range n.selectReq.DocIDs.Value() {
+				docIDIndexKey := base.MakeDocID(sourcePlan.collection.Description(), docID)
+				spans[i] = core.NewSpan(docIDIndexKey, docIDIndexKey.PrefixEnd())
 			}
 			origScan.Spans(core.NewSpans(spans...))
 		}
@@ -352,7 +352,7 @@ func (n *selectNode) initFields(selectReq *mapper.Select) ([]aggregateNode, erro
 					// of that Target version we are querying.
 					// So instead of a LatestCommit subquery, we need
 					// a OneCommit subquery, with the supplied parameters.
-					commitSlct.DocKey = immutable.Some(selectReq.DocKeys.Value()[0]) // @todo check length
+					commitSlct.DocID = immutable.Some(selectReq.DocIDs.Value()[0]) // @todo check length
 					commitSlct.Cid = selectReq.Cid
 				}
 
@@ -412,7 +412,7 @@ func (p *Planner) SelectFromSource(
 		selectReq:  selectReq,
 		docMapper:  docMapper{selectReq.DocumentMapping},
 		filter:     selectReq.Filter,
-		keys:       selectReq.DocKeys,
+		keys:       selectReq.DocIDs,
 	}
 	limit := selectReq.Limit
 	orderBy := selectReq.OrderBy
@@ -467,7 +467,7 @@ func (p *Planner) Select(selectReq *mapper.Select) (planNode, error) {
 	s := &selectNode{
 		planner:   p,
 		filter:    selectReq.Filter,
-		keys:      selectReq.DocKeys,
+		keys:      selectReq.DocIDs,
 		selectReq: selectReq,
 		docMapper: docMapper{selectReq.DocumentMapping},
 	}

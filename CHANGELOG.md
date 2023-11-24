@@ -97,7 +97,7 @@ To get a full outline of the changes, we invite you to review the official chang
 * Add alias to `groupBy` related object ([#1579](https://github.com/sourcenetwork/defradb/issues/1579))
 * Non-unique secondary index (no querying) ([#1450](https://github.com/sourcenetwork/defradb/issues/1450))
 * Add ability to explain-debug all nodes ([#1563](https://github.com/sourcenetwork/defradb/issues/1563))
-* Include dockey in doc exists err ([#1558](https://github.com/sourcenetwork/defradb/issues/1558))
+* Include docID in doc exists err ([#1558](https://github.com/sourcenetwork/defradb/issues/1558))
 
 ### Fixes
 
@@ -187,7 +187,7 @@ To get a full outline of the changes, we invite you to review the official chang
 * Improve NonNull error message ([#1362](https://github.com/sourcenetwork/defradb/issues/1362))
 * Use ring-buffer for WaitForFoo chans ([#1359](https://github.com/sourcenetwork/defradb/issues/1359))
 * Guarantee event processing order ([#1352](https://github.com/sourcenetwork/defradb/issues/1352))
-* Explain of _group with dockeys filter to be []string ([#1348](https://github.com/sourcenetwork/defradb/issues/1348))
+* Explain of _group with docIDs filter to be []string ([#1348](https://github.com/sourcenetwork/defradb/issues/1348))
 
 ### Refactoring
 
@@ -263,10 +263,10 @@ This release does include a Breaking Change to existing v0.4.x databases. If you
 * Ability to explain an executed request ([#1188](https://github.com/sourcenetwork/defradb/issues/1188))
 * Add SchemaPatch CLI command ([#1250](https://github.com/sourcenetwork/defradb/issues/1250))
 * Add support for one-one mutation from sec. side ([#1247](https://github.com/sourcenetwork/defradb/issues/1247))
-* Store only key in DAG instead of dockey path ([#1245](https://github.com/sourcenetwork/defradb/issues/1245))
+* Store only key in DAG instead of docID path ([#1245](https://github.com/sourcenetwork/defradb/issues/1245))
 * Add collectionId field to commit field ([#1235](https://github.com/sourcenetwork/defradb/issues/1235))
 * Add field kind substitution for PatchSchema ([#1223](https://github.com/sourcenetwork/defradb/issues/1223))
-* Add dockey field for commit field ([#1216](https://github.com/sourcenetwork/defradb/issues/1216))
+* Add docID field for commit field ([#1216](https://github.com/sourcenetwork/defradb/issues/1216))
 * Allow new fields to be added locally to schema ([#1139](https://github.com/sourcenetwork/defradb/issues/1139))
 * Add `like` sub-string filter ([#1091](https://github.com/sourcenetwork/defradb/issues/1091))
 * Add ability for P2P to wait for pushlog by peer ([#1098](https://github.com/sourcenetwork/defradb/issues/1098))
@@ -407,7 +407,7 @@ This release does include a Breaking Change to existing v0.3.x databases. If you
 * Add support for tls ([#885](https://github.com/sourcenetwork/defradb/issues/885))
 * Add group by support for commits ([#887](https://github.com/sourcenetwork/defradb/issues/887))
 * Add depth support for commits ([#889](https://github.com/sourcenetwork/defradb/issues/889))
-* Make dockey optional for allCommits queries ([#847](https://github.com/sourcenetwork/defradb/issues/847))
+* Make docID optional for allCommits queries ([#847](https://github.com/sourcenetwork/defradb/issues/847))
 * Add WithStack to the errors package ([#870](https://github.com/sourcenetwork/defradb/issues/870))
 * Add event system ([#834](https://github.com/sourcenetwork/defradb/issues/834))
 
@@ -479,7 +479,7 @@ DefraDB v0.3.1 is a minor release, primarily focusing on additional/extended fea
 * Add limit support to allCommits query ([#856](https://github.com/sourcenetwork/defradb/issues/856))
 * Add order support to allCommits ([#845](https://github.com/sourcenetwork/defradb/issues/845))
 * Display CLI usage on user error ([#819](https://github.com/sourcenetwork/defradb/issues/819))
-* Add support for dockey filters in child joins ([#806](https://github.com/sourcenetwork/defradb/issues/806))
+* Add support for docID filters in child joins ([#806](https://github.com/sourcenetwork/defradb/issues/806))
 * Add sort support for numeric aggregates ([#786](https://github.com/sourcenetwork/defradb/issues/786))
 * Allow filtering by nil ([#789](https://github.com/sourcenetwork/defradb/issues/789))
 * Add aggregate offset support ([#778](https://github.com/sourcenetwork/defradb/issues/778))
@@ -614,7 +614,7 @@ This release does include a Breaking Change to existing v0.2.x databases. If you
 * Rename aggregate gql types ([#638](https://github.com/sourcenetwork/defradb/issues/638))
 * Error when attempting to insert value into relationship field ([#632](https://github.com/sourcenetwork/defradb/issues/632))
 * Allow adding of new schema to database ([#635](https://github.com/sourcenetwork/defradb/issues/635))
-* Correctly parse dockey in broadcast log event. ([#631](https://github.com/sourcenetwork/defradb/issues/631))
+* Correctly parse docID in broadcast log event. ([#631](https://github.com/sourcenetwork/defradb/issues/631))
 * Increase system's open files limit in integration tests ([#627](https://github.com/sourcenetwork/defradb/issues/627))
 * Avoid populating `order.ordering` with empties. ([#618](https://github.com/sourcenetwork/defradb/issues/618))
 * Change to supporting of non-null inline arrays ([#609](https://github.com/sourcenetwork/defradb/issues/609))
@@ -672,8 +672,8 @@ This release does include a Breaking Change to existing v0.2.x databases. If you
 * Move public members out of core and base packages ([#295](https://github.com/sourcenetwork/defradb/issues/295))
 * Make db stuff internal/private ([#291](https://github.com/sourcenetwork/defradb/issues/291))
 * Rework client.DB to ensure interface contains only public types ([#277](https://github.com/sourcenetwork/defradb/issues/277))
-* Remove GetPrimaryIndexDocKey from collection interface ([#279](https://github.com/sourcenetwork/defradb/issues/279))
-* Remove DataStoreKey from (public) dockey struct ([#278](https://github.com/sourcenetwork/defradb/issues/278))
+* Remove GetPrimaryIndexDocID from collection interface ([#279](https://github.com/sourcenetwork/defradb/issues/279))
+* Remove DataStoreKey from (public) docID struct ([#278](https://github.com/sourcenetwork/defradb/issues/278))
 * Renormalize to ensure consistent file line termination. ([#226](https://github.com/sourcenetwork/defradb/issues/226))
 * Strongly typed key refactor ([#17](https://github.com/sourcenetwork/defradb/issues/17))
 
@@ -803,7 +803,7 @@ This release is jam-packed with new features and a small number of breaking chan
 
 Much more than just that has been added to ensure we're building reliable software expected of any database, such as expanded test & benchmark suites, automated bug detection, performance gains, and more.
 
-This release does include a Breaking Change to existing v0.1 databases regarding the internal data model, which affects the "Content Identifiers" we use to generate DocKeys and VersionIDs. If you need help migrating an existing deployment, reach out at hello@source.network or join our Discord at https://discord.source.network.
+This release does include a Breaking Change to existing v0.1 databases regarding the internal data model, which affects the "Content Identifiers" we use to generate DocIDs and VersionIDs. If you need help migrating an existing deployment, reach out at hello@source.network or join our Discord at https://discord.source.network.
 
 ### Features
 
