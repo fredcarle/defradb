@@ -1,16 +1,9 @@
 version: 1
 
-dist: ./build
-
 before:
   hooks:
     - go mod tidy
     - make deps:playground
-
-after:
-  hooks:
-    - cmd: docker pull {{ .Env.GITHUB_REPOSITORY }}:latest
-    - cmd: docker run --rm {{ .Env.GITHUB_REPOSITORY }}:latest
 
 builds:
   - id: "defradb"
@@ -34,6 +27,9 @@ builds:
     goarch:
       - amd64
       - arm64
+  
+partial:
+  by: target
 
 archives:
   - id: defradb_playground
@@ -94,7 +90,7 @@ dockers:
   image_templates:
   - "{{ .Env.GITHUB_REPOSITORY }}:latest"
   - "{{ .Env.GITHUB_REPOSITORY }}:{{ .Version }}"
-  - "ghcr.io/{{ .Env.GITHUB_REPOSITORY }}:{{ .Version }}"
+  # - "ghcr.io/{{ .Env.GITHUB_REPOSITORY }}:{{ .Version }}"
   use: buildx
   build_flag_templates:
   - "--pull"
