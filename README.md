@@ -15,6 +15,8 @@ DefraDB is a user-centric database that prioritizes data ownership, personal pri
 
 Read the documentation on [docs.source.network](https://docs.source.network/).
 
+Release test
+
 ## Table of Contents
 
 - [Early Access](#early-access)
