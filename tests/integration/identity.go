@@ -21,36 +21,55 @@ import (
 	acpIdentity "github.com/sourcenetwork/defradb/acp/identity"
 )
 
-// identRef is a type that refers to a specific identity of a certain type.
-type identRef struct {
-	hasValue bool
-	isUser   bool
-	index    int
+type identityType int
+
+const (
+	noType identityType = iota
+	clientType
+	nodeType
+)
+
+type identity struct {
+	index int
+	iType identityType
 }
 
-// NoIdentity returns an reference to an identity that represents no identity.
-func NoIdentity() identRef {
-	return identRef{
-		hasValue: false,
-	}
+func NodeIdentity(index int) identity {
+	return identity{index, nodeType}
 }
 
-// UserIdentity returns a reference to a user identity with a given index.
-func UserIdentity(index int) identRef {
-	return identRef{
-		hasValue: true,
-		isUser:   true,
-		index:    index,
-	}
+func ClientIdentity(index int) identity {
+	return identity{index, clientType}
 }
 
-// NodeIdentity returns a reference to a node identity with a given index.
-func NodeIdentity(index int) identRef {
-	return identRef{
-		hasValue: true,
-		isUser:   false,
-		index:    index,
+func NoIdentity() identity {
+	return identity{0, noType}
+}
+
+func (i identity) get(s *state) acpIdentity.Identity {
+	var identities map[int]*identityHolder
+	switch i.iType {
+	case clientType:
+		identities = s.clientIdentities
+	case nodeType:
+		identities = s.nodeIdentities
+	default:
+		return acpIdentity.Identity{}
 	}
+	return getIdentityHolder(s, i.index, identities).Identity
+}
+
+func (i identity) withToken(s *state, nodeID int) acpIdentity.Identity {
+	var identities map[int]*identityHolder
+	switch i.iType {
+	case clientType:
+		identities = s.clientIdentities
+	case nodeType:
+		identities = s.nodeIdentities
+	default:
+		return acpIdentity.Identity{}
+	}
+	return getIdentityHolderWithToken(s, i.index, nodeID, identities).Identity
 }
 
 // identityHolder holds an identity and the generated tokens for each target node.
@@ -69,41 +88,21 @@ func newIdentityHolder(ident acpIdentity.Identity) *identityHolder {
 	}
 }
 
-// getIdentity returns the identity for the given reference.
-// If the identity does not exist, it will be generated.
-func getIdentity(s *state, ref identRef) acpIdentity.Identity {
-	return getIdentityHolder(s, ref).Identity
-}
-
-// getIdentityHolder returns the identity holder for the given reference.
-// If the identity does not exist, it will be generated.
-func getIdentityHolder(s *state, ref identRef) *identityHolder {
-	ident, ok := s.identities[ref]
-	if ok {
-		return ident
+func getIdentityHolder(s *state, index int, identities map[int]*identityHolder) *identityHolder {
+	_, ok := identities[index]
+	if !ok {
+		identities[index] = newIdentityHolder(generateIdentity(s))
 	}
-
-	s.identities[ref] = newIdentityHolder(generateIdentity(s))
-	return s.identities[ref]
+	return identities[index]
 }
 
-// getIdentityForRequest returns the identity for the given reference and node index.
-// It prepares the identity for a request by generating a token if needed, i.e. it will
-// return an identity with [Identity.BearerToken] set.
-func getIdentityForRequest(s *state, ref identRef, nodeIndex int) acpIdentity.Identity {
-	identHolder := getIdentityHolder(s, ref)
-	ident := identHolder.Identity
-
-	token, ok := identHolder.NodeTokens[nodeIndex]
+func getIdentityHolderWithToken(s *state, index, nodeID int, identities map[int]*identityHolder) *identityHolder {
+	ident := getIdentityHolder(s, index, identities)
+	token, ok := ident.NodeTokens[nodeID]
 	if ok {
-		ident.BearerToken = token
+		ident.Identity.BearerToken = token
 	} else {
-		audience := getNodeAudience(s, nodeIndex)
-		if acpType == SourceHubACPType || audience.HasValue() {
-			err := ident.UpdateToken(authTokenExpiration, audience, immutable.Some(s.sourcehubAddress))
-			require.NoError(s.t, err)
-			identHolder.NodeTokens[nodeIndex] = ident.BearerToken
-		}
+		ident.NodeTokens[nodeID] = generateToken(s, &ident.Identity, nodeID)
 	}
 	return ident
 }
@@ -125,20 +124,27 @@ func generateIdentity(s *state) acpIdentity.Identity {
 	return identity
 }
 
+func generateToken(s *state, ident *acpIdentity.Identity, nodeID int) string {
+	audience := getNodeAudience(s, nodeID)
+	if acpType == SourceHubACPType || audience.HasValue() {
+		err := ident.UpdateToken(
+			authTokenExpiration,
+			audience,
+			immutable.Some(s.sourcehubAddress),
+		)
+		require.NoError(s.t, err)
+		return ident.BearerToken
+	}
+	return ""
+}
+
 // getContextWithIdentity returns a context with the identity for the given reference and node index.
 // If the identity does not exist, it will be generated.
 // The identity added to the context is prepared for a request, i.e. its [Identity.BearerToken] is set.
-func getContextWithIdentity(ctx context.Context, s *state, ref identRef, nodeIndex int) context.Context {
-	if !ref.hasValue {
+func getContextWithIdentity(ctx context.Context, s *state, ref identity, nodeIndex int) context.Context {
+	if ref.iType == noType {
 		return ctx
 	}
-	ident := getIdentityForRequest(s, ref, nodeIndex)
+	ident := ref.withToken(s, nodeIndex)
 	return acpIdentity.WithContext(ctx, immutable.Some(ident))
-}
-
-func getIdentityDID(s *state, ident identRef) string {
-	if ident.hasValue {
-		return getIdentity(s, ident).DID
-	}
-	return ""
 }
