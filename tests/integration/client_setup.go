@@ -40,28 +40,9 @@ func setupClient(s *state, node *node.Node) (clients.Client, error) {
 		return cli.NewWrapper(node, s.sourcehubAddress)
 
 	case GoClientType:
-		return newGoClientWrapper(node), nil
+		return node, nil
 
 	default:
 		return nil, fmt.Errorf("invalid client type: %v", s.dbt)
 	}
-}
-
-type goClientWrapper struct {
-	node.DB
-	node.Peer
-}
-
-func newGoClientWrapper(n *node.Node) *goClientWrapper {
-	return &goClientWrapper{
-		DB:   n.DB,
-		Peer: n.Peer,
-	}
-}
-
-func (w *goClientWrapper) Close() {
-	if w.Peer != nil {
-		w.Peer.Close()
-	}
-	w.DB.Close()
 }

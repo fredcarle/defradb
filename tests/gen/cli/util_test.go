@@ -15,8 +15,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	badgerds "github.com/dgraph-io/badger/v4"
-	"github.com/sourcenetwork/corekv/badger"
 	"github.com/sourcenetwork/corelog"
 	"github.com/stretchr/testify/require"
 
@@ -24,14 +22,14 @@ import (
 	"github.com/sourcenetwork/defradb/client"
 	"github.com/sourcenetwork/defradb/errors"
 	httpapi "github.com/sourcenetwork/defradb/http"
-	"github.com/sourcenetwork/defradb/internal/db"
+	"github.com/sourcenetwork/defradb/node"
 )
 
 var log = corelog.NewLogger("cli")
 
 type DB interface {
 	client.DB
-	Close()
+	Close(ctx context.Context) error
 }
 
 type defraInstance struct {
@@ -40,7 +38,7 @@ type defraInstance struct {
 }
 
 func (di *defraInstance) close(ctx context.Context) {
-	di.db.Close()
+	di.db.Close(ctx)
 	di.server.Close()
 }
 
@@ -48,24 +46,20 @@ func start(ctx context.Context) (*defraInstance, error) {
 	log.InfoContext(ctx, "Starting DefraDB service...")
 
 	log.InfoContext(ctx, "Building new memory store")
-	rootstore, err := badger.NewDatastore("", badgerds.DefaultOptions("").WithInMemory(true))
-	if err != nil {
-		return nil, err
-	}
 
-	db, err := db.NewDB(ctx, rootstore, dac.NoDocumentACP, nil)
+	n, err := node.New(ctx, dac.NoDocumentACP, node.WithDisableAPI(true), node.WithDisableP2P(true))
 	if err != nil {
 		return nil, errors.Wrap("failed to create a database", err)
 	}
 
-	handler, err := httpapi.NewHandler(db, nil)
+	handler, err := httpapi.NewHandler(n)
 	if err != nil {
 		return nil, errors.Wrap("failed to create http handler", err)
 	}
 	server := httptest.NewServer(handler)
 
 	return &defraInstance{
-		db:     db,
+		db:     n,
 		server: server,
 	}, nil
 }

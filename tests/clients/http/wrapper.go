@@ -41,7 +41,7 @@ type Wrapper struct {
 }
 
 func NewWrapper(node *node.Node) (*Wrapper, error) {
-	handler, err := http.NewHandler(node.DB, node.Peer)
+	handler, err := http.NewHandler(node)
 	if err != nil {
 		return nil, err
 	}
@@ -245,20 +245,20 @@ func (w *Wrapper) Close() {
 }
 
 func (w *Wrapper) Events() *event.Bus {
-	return w.node.DB.Events()
+	return w.node.Events()
 }
 
-func (w *Wrapper) MaxTxnRetries() int {
-	return w.node.DB.MaxTxnRetries()
-}
+// func (w *Wrapper) MaxTxnRetries() int {
+// 	return w.node.DB.MaxTxnRetries()
+// }
 
 func (w *Wrapper) PrintDump(ctx context.Context) error {
-	return w.node.DB.PrintDump(ctx)
+	return w.node.PrintDump(ctx)
 }
 
-func (w *Wrapper) Connect(ctx context.Context, addr peer.AddrInfo) error {
-	return w.node.Peer.Connect(ctx, addr)
-}
+// func (w *Wrapper) Connect(ctx context.Context, addr peer.AddrInfo) error {
+// 	return w.node.Peer.Connect(ctx, addr)
+// }
 
 func (w *Wrapper) Host() string {
 	return w.httpServer.URL

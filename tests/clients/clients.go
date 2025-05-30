@@ -25,7 +25,7 @@ type Client interface {
 	client.DB
 	client.P2P
 	Connect(ctx context.Context, addr peer.AddrInfo) error
-	Close()
+	Close(ctx context.Context) error
 	MaxTxnRetries() int
 	Events() *event.Bus
 }

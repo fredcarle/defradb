@@ -41,12 +41,12 @@ func ParseSDL(gqlSDL string) (map[string]client.CollectionDefinition, error) {
 		return nil, err
 	}
 
-	_, err = node.DB.AddSchema(ctx, gqlSDL)
+	_, err = node.AddSchema(ctx, gqlSDL)
 	if err != nil {
 		return nil, err
 	}
 
-	cols, err := node.DB.GetCollections(ctx, client.CollectionFetchOptions{})
+	cols, err := node.GetCollections(ctx, client.CollectionFetchOptions{})
 	if err != nil {
 		return nil, err
 	}

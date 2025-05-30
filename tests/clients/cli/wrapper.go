@@ -49,7 +49,7 @@ type Wrapper struct {
 //
 // sourceHubAddress can (and will) be empty when testing non sourceHub ACP implementations.
 func NewWrapper(node *node.Node, sourceHubAddress string) (*Wrapper, error) {
-	handler, err := http.NewHandler(node.DB, node.Peer)
+	handler, err := http.NewHandler(node)
 	if err != nil {
 		return nil, err
 	}
@@ -524,11 +524,7 @@ func (w *Wrapper) Close() {
 }
 
 func (w *Wrapper) Events() *event.Bus {
-	return w.node.DB.Events()
-}
-
-func (w *Wrapper) MaxTxnRetries() int {
-	return w.node.DB.MaxTxnRetries()
+	return w.node.Events()
 }
 
 func (w *Wrapper) PrintDump(ctx context.Context) error {
@@ -538,9 +534,9 @@ func (w *Wrapper) PrintDump(ctx context.Context) error {
 	return err
 }
 
-func (w *Wrapper) Connect(ctx context.Context, addr peer.AddrInfo) error {
-	return w.node.Peer.Connect(ctx, addr)
-}
+// func (w *Wrapper) Connect(ctx context.Context, addr peer.AddrInfo) error {
+// 	return w.node.Connect(ctx, addr)
+// }
 
 func (w *Wrapper) Host() string {
 	return w.httpServer.URL

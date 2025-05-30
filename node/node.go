@@ -13,17 +13,22 @@ package node
 import (
 	"context"
 
+	"github.com/lens-vm/lens/host-go/config/model"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/sourcenetwork/corekv"
 	"github.com/sourcenetwork/corelog"
 	"github.com/sourcenetwork/immutable"
 
 	"github.com/sourcenetwork/defradb/acp/dac"
+	"github.com/sourcenetwork/defradb/acp/identity"
 	"github.com/sourcenetwork/defradb/client"
+	"github.com/sourcenetwork/defradb/crypto"
+	"github.com/sourcenetwork/defradb/datastore"
 	"github.com/sourcenetwork/defradb/event"
 	"github.com/sourcenetwork/defradb/http"
 	"github.com/sourcenetwork/defradb/internal/db"
 	"github.com/sourcenetwork/defradb/internal/kms"
+	"github.com/sourcenetwork/defradb/net"
 )
 
 var log = corelog.NewLogger("node")
@@ -48,10 +53,10 @@ type DB interface {
 
 // Node is a DefraDB instance with optional sub-systems.
 type Node struct {
-	// DB is the database instance
-	DB DB
-	// Peer is the p2p networking subsystem instance
-	Peer Peer
+	// db is the database instance
+	db *db.DB
+	// peer is the p2p networking subsystem instance
+	peer *net.Peer
 	// api http server instance
 	server *http.Server
 	// kms subsystem instance
@@ -90,7 +95,7 @@ func (n *Node) Start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	n.DB, err = db.NewDB(ctx, rootstore, documentACP, lens, filterOptions[db.Option](n.options)...)
+	n.db, err = db.NewDB(ctx, rootstore, documentACP, lens, filterOptions[db.Option](n.options)...)
 	if err != nil {
 		return err
 	}
@@ -107,13 +112,17 @@ func (n *Node) Close(ctx context.Context) error {
 	if n.server != nil {
 		err = n.server.Shutdown(ctx)
 	}
-	if n.Peer != nil {
-		n.Peer.Close()
+	if n.peer != nil {
+		n.peer.Close()
 	}
-	if n.DB != nil {
-		n.DB.Close()
+	if n.db != nil {
+		n.db.Close()
 	}
 	return err
+}
+
+func (n *Node) HasP2P() bool {
+	return n.peer != nil
 }
 
 // PurgeAndRestart causes the node to shutdown, purge all data from
@@ -133,10 +142,143 @@ func (n *Node) PurgeAndRestart(ctx context.Context) error {
 
 	// This will purge state.
 	// They will be restarted when node is started again.
-	err = n.DB.PurgeACPState(ctx)
+	err = n.db.PurgeACPState(ctx)
 	if err != nil {
 		return err
 	}
 
 	return n.Start(ctx)
+}
+
+func (n *Node) Events() *event.Bus {
+	return n.db.Events()
+}
+func (n *Node) MaxTxnRetries() int
+func (n *Node) Rootstore() corekv.TxnStore
+func (n *Node) Events() *event.Bus
+func (n *Node) DocumentACP() immutable.Option[dac.DocumentACP]
+func (n *Node) PurgeACPState(ctx context.Context) error
+func (n *Node) GetNodeIdentityToken(ctx context.Context, audience immutable.Option[string]) ([]byte, error)
+func (n *Node) Close()
+
+// The methods below implement the `client.DB` interface
+
+var _ client.DB = (*Node)(nil)
+
+func (n *Node) NewTxn(ctx context.Context, readOnly bool) (datastore.Txn, error) {
+	return n.db.NewTxn(ctx, readOnly)
+}
+
+func (n *Node) NewConcurrentTxn(ctx context.Context, readOnly bool) (datastore.Txn, error) {
+	return n.db.NewTxn(ctx, readOnly)
+}
+
+func (n *Node) PrintDump(ctx context.Context) error {
+	return n.db.PrintDump(ctx)
+}
+
+func (n *Node) AddPolicy(ctx context.Context, policy string) (client.AddPolicyResult, error) {
+	return n.db.AddPolicy(ctx, policy)
+}
+
+func (n *Node) AddDocActorRelationship(
+	ctx context.Context,
+	collectionName string,
+	docID string,
+	relation string,
+	targetActor string,
+) (client.AddDocActorRelationshipResult, error) {
+	return n.db.AddDocActorRelationship(ctx, collectionName, docID, relation, targetActor)
+}
+
+func (n *Node) DeleteDocActorRelationship(
+	ctx context.Context,
+	collectionName string,
+	docID string,
+	relation string,
+	targetActor string,
+) (client.DeleteDocActorRelationshipResult, error) {
+	return n.db.DeleteDocActorRelationship(ctx, collectionName, docID, relation, targetActor)
+}
+
+func (n *Node) GetNodeIdentity(ctx context.Context) (immutable.Option[identity.PublicRawIdentity], error) {
+	return n.db.GetNodeIdentity(ctx)
+}
+
+func (n *Node) VerifySignature(ctx context.Context, blockCid string, pubKey crypto.PublicKey) error {
+	return n.db.VerifySignature(ctx, blockCid, pubKey)
+}
+
+func (n *Node) AddSchema(ctx context.Context, schema string) ([]client.CollectionVersion, error) {
+	return n.db.AddSchema(ctx, schema)
+}
+
+func (n *Node) PatchSchema(
+	ctx context.Context,
+	patch string,
+	migration immutable.Option[model.Lens],
+	setdefault bool,
+) error {
+	return n.db.PatchSchema(ctx, patch, migration, setdefault)
+}
+
+func (n *Node) PatchCollection(ctx context.Context, patch string) error {
+	return n.db.PatchCollection(ctx, patch)
+}
+
+func (n *Node) SetActiveSchemaVersion(ctx context.Context, schemaVersionID string) error {
+	return n.db.SetActiveSchemaVersion(ctx, schemaVersionID)
+}
+
+func (n *Node) AddView(
+	ctx context.Context,
+	gqlQuery string,
+	sdl string,
+	transform immutable.Option[model.Lens],
+) ([]client.CollectionDefinition, error) {
+	return n.db.AddView(ctx, gqlQuery, sdl, transform)
+}
+
+func (n *Node) RefreshViews(ctx context.Context, opts client.CollectionFetchOptions) error {
+	return n.db.RefreshViews(ctx, opts)
+}
+
+func (n *Node) SetMigration(ctx context.Context, config client.LensConfig) error {
+	return n.db.SetMigration(ctx, config)
+}
+
+func (n *Node) LensRegistry() client.LensRegistry {
+	return n.db.LensRegistry()
+}
+
+func (n *Node) GetCollectionByName(ctx context.Context, name client.CollectionName) (client.Collection, error) {
+	return n.db.GetCollectionByName(ctx, name)
+}
+
+func (n *Node) GetCollections(ctx context.Context, opts client.CollectionFetchOptions) ([]client.Collection, error) {
+	return n.db.GetCollections(ctx, opts)
+}
+
+func (n *Node) GetSchemaByVersionID(ctx context.Context, versionID string) (client.SchemaDescription, error) {
+	return n.db.GetSchemaByVersionID(ctx, versionID)
+}
+
+func (n *Node) GetSchemas(ctx context.Context, opts client.SchemaFetchOptions) ([]client.SchemaDescription, error) {
+	return n.db.GetSchemas(ctx, opts)
+}
+
+func (n *Node) GetAllIndexes(ctx context.Context) (map[client.CollectionName][]client.IndexDescription, error) {
+	return n.db.GetAllIndexes(ctx)
+}
+
+func (n *Node) ExecRequest(ctx context.Context, request string, opts ...client.RequestOption) *client.RequestResult {
+	return n.db.ExecRequest(ctx, request, opts...)
+}
+
+func (n *Node) BasicImport(ctx context.Context, filepath string) error {
+	return n.db.BasicImport(ctx, filepath)
+}
+
+func (n *Node) BasicExport(ctx context.Context, config *client.BackupConfig) error {
+	return n.db.BasicExport(ctx, config)
 }
