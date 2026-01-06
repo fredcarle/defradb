@@ -12,6 +12,7 @@ package p2p
 
 import (
 	"context"
+	"time"
 
 	"github.com/ipld/go-ipld-prime/linking"
 	cidlink "github.com/ipld/go-ipld-prime/linking/cid"
@@ -38,11 +39,10 @@ func makeLinkSystem(blockService blockstore.IPLDStore) linking.LinkSystem {
 // This process walks the entire DAG until the issue below is resolved.
 // https://github.com/sourcenetwork/defradb/issues/2722
 func (p *P2P) syncDAG(ctx context.Context, block *coreblock.Block) error {
+	// use a session to make remote fetches more efficient
 	sessionCtx, cancelSession := context.WithCancel(ctx)
 	defer cancelSession()
-
-	// use a session to make remote fetches more efficient
-	sessionCtx = p.host.ContextWithSession(sessionCtx)
+	ctx = p.host.ContextWithSession(sessionCtx)
 
 	linkSystem := makeLinkSystem(p.host.IPLDStore())
 
@@ -71,6 +71,8 @@ func (p *P2P) loadBlockLinks(ctx context.Context, linkSys *linking.LinkSystem, b
 	if merged {
 		return nil
 	}
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
 
 	// TODO: this part is not tested yet because there is not easy way of doing it at the moment.
 	// https://github.com/sourcenetwork/defradb/issues/3525

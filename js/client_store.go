@@ -25,11 +25,11 @@ import (
 )
 
 func (c *Client) addSchema(this js.Value, args []js.Value) (js.Value, error) {
-	schema, err := stringArg(args, 0, "schema")
+	schema, err := utils.StringArg(args, 0, "schema")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 1, c.txns)
+	ctx, err := utils.ContextArg(args, 1, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -43,15 +43,15 @@ func (c *Client) addSchema(this js.Value, args []js.Value) (js.Value, error) {
 }
 
 func (c *Client) patchCollection(this js.Value, args []js.Value) (js.Value, error) {
-	patch, err := stringArg(args, 0, "patch")
+	patch, err := utils.StringArg(args, 0, "patch")
 	if err != nil {
 		return js.Undefined(), err
 	}
 	var migration immutable.Option[model.Lens]
-	if err := structArg(args, 1, "lens", &migration); err != nil {
+	if err := utils.StructArg(args, 1, "lens", &migration); err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 2, c.txns)
+	ctx, err := utils.ContextArg(args, 2, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -62,11 +62,11 @@ func (c *Client) patchCollection(this js.Value, args []js.Value) (js.Value, erro
 }
 
 func (c *Client) setActiveCollectionVersion(this js.Value, args []js.Value) (js.Value, error) {
-	version, err := stringArg(args, 0, "version")
+	version, err := utils.StringArg(args, 0, "version")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 1, c.txns)
+	ctx, err := utils.ContextArg(args, 1, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -77,11 +77,11 @@ func (c *Client) setActiveCollectionVersion(this js.Value, args []js.Value) (js.
 }
 
 func (c *Client) addView(this js.Value, args []js.Value) (js.Value, error) {
-	gqlQuery, err := stringArg(args, 0, "gqlQuery")
+	gqlQuery, err := utils.StringArg(args, 0, "gqlQuery")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	sdl, err := stringArg(args, 1, "sdl")
+	sdl, err := utils.StringArg(args, 1, "sdl")
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -89,7 +89,7 @@ func (c *Client) addView(this js.Value, args []js.Value) (js.Value, error) {
 	if err := structArg(args, 2, "transformCID", &transformCID); err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 3, c.txns)
+	ctx, err := utils.ContextArg(args, 3, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -118,7 +118,7 @@ func (c *Client) refreshViews(this js.Value, args []js.Value) (js.Value, error) 
 	if err := structArg(args, 0, "options", &input); err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 1, c.txns)
+	ctx, err := utils.ContextArg(args, 1, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -130,10 +130,10 @@ func (c *Client) refreshViews(this js.Value, args []js.Value) (js.Value, error) 
 
 func (c *Client) setMigration(this js.Value, args []js.Value) (js.Value, error) {
 	var config client.LensConfig
-	if err := structArg(args, 0, "config", &config); err != nil {
+	if err := utils.StructArg(args, 0, "config", &config); err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 1, c.txns)
+	ctx, err := utils.ContextArg(args, 1, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -179,11 +179,11 @@ func (c *Client) listLenses(this js.Value, args []js.Value) (js.Value, error) {
 }
 
 func (c *Client) getCollectionByName(this js.Value, args []js.Value) (js.Value, error) {
-	name, err := stringArg(args, 0, "name")
+	name, err := utils.StringArg(args, 0, "name")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 1, c.txns)
+	ctx, err := utils.ContextArg(args, 1, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -201,7 +201,7 @@ func (c *Client) getCollections(this js.Value, args []js.Value) (js.Value, error
 	if err := structArg(args, 0, "options", &input); err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 1, c.txns)
+	ctx, err := utils.ContextArg(args, 1, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -251,7 +251,7 @@ func (c *Client) listIndexes(this js.Value, args []js.Value) (js.Value, error) {
 }
 
 func (c *Client) listAllEncryptedIndexes(this js.Value, args []js.Value) (js.Value, error) {
-	ctx, err := contextArg(args, 0, c.txns)
+	ctx, err := utils.ContextArg(args, 0, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -265,7 +265,7 @@ func (c *Client) listAllEncryptedIndexes(this js.Value, args []js.Value) (js.Val
 }
 
 func (c *Client) execRequest(this js.Value, args []js.Value) (js.Value, error) {
-	request, err := stringArg(args, 0, "request")
+	request, err := utils.StringArg(args, 0, "request")
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -285,7 +285,7 @@ func (c *Client) execRequest(this js.Value, args []js.Value) (js.Value, error) {
 			opt.SetVariables(variablesMap)
 		}
 	}
-	ctx, err := contextArg(args, 2, c.txns)
+	ctx, err := utils.ContextArg(args, 2, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}

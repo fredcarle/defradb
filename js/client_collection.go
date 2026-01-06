@@ -72,7 +72,7 @@ func (c *clientCollection) collectionID(this js.Value, args []js.Value) (js.Valu
 
 func (c *clientCollection) add(this js.Value, args []js.Value) (js.Value, error) {
 	var docMap map[string]any
-	if err := structArg(args, 0, "doc", &docMap); err != nil {
+	if err := utils.StructArg(args, 0, "doc", &docMap); err != nil {
 		return js.Undefined(), err
 	}
 
@@ -81,7 +81,7 @@ func (c *clientCollection) add(this js.Value, args []js.Value) (js.Value, error)
 		return js.Undefined(), err
 	}
 
-	ctx, err := contextArg(args, 2, c.txns)
+	ctx, err := utils.ContextArg(args, 2, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -95,7 +95,7 @@ func (c *clientCollection) add(this js.Value, args []js.Value) (js.Value, error)
 
 func (c *clientCollection) addMany(this js.Value, args []js.Value) (js.Value, error) {
 	var docMaps []map[string]any
-	if err := structArg(args, 0, "doc", &docMaps); err != nil {
+	if err := utils.StructArg(args, 0, "doc", &docMaps); err != nil {
 		return js.Undefined(), err
 	}
 
@@ -104,7 +104,7 @@ func (c *clientCollection) addMany(this js.Value, args []js.Value) (js.Value, er
 		return js.Undefined(), err
 	}
 
-	ctx, err := contextArg(args, 2, c.txns)
+	ctx, err := utils.ContextArg(args, 2, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -144,15 +144,15 @@ func getAddOptionsFromArg(args []js.Value, argIndex int, ctxArgIndex int) ([]opt
 }
 
 func (c *clientCollection) update(this js.Value, args []js.Value) (js.Value, error) {
-	docIDString, err := stringArg(args, 0, "docID")
+	docIDString, err := utils.StringArg(args, 0, "docID")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	patch, err := stringArg(args, 1, "patch")
+	patch, err := utils.StringArg(args, 1, "patch")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 2, c.txns)
+	ctx, err := utils.ContextArg(args, 2, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -176,11 +176,11 @@ func (c *clientCollection) update(this js.Value, args []js.Value) (js.Value, err
 }
 
 func (c *clientCollection) delete(this js.Value, args []js.Value) (js.Value, error) {
-	docIDString, err := stringArg(args, 0, "docID")
+	docIDString, err := utils.StringArg(args, 0, "docID")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 1, c.txns)
+	ctx, err := utils.ContextArg(args, 1, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -198,11 +198,11 @@ func (c *clientCollection) delete(this js.Value, args []js.Value) (js.Value, err
 }
 
 func (c *clientCollection) exists(this js.Value, args []js.Value) (js.Value, error) {
-	docIDString, err := stringArg(args, 0, "docID")
+	docIDString, err := utils.StringArg(args, 0, "docID")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 1, c.txns)
+	ctx, err := utils.ContextArg(args, 1, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -220,15 +220,15 @@ func (c *clientCollection) exists(this js.Value, args []js.Value) (js.Value, err
 }
 
 func (c *clientCollection) updateWithFilter(this js.Value, args []js.Value) (js.Value, error) {
-	filter, err := stringArg(args, 0, "filter")
+	filter, err := utils.StringArg(args, 0, "filter")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	updater, err := stringArg(args, 1, "updater")
+	updater, err := utils.StringArg(args, 1, "updater")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 2, c.txns)
+	ctx, err := utils.ContextArg(args, 2, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -242,11 +242,11 @@ func (c *clientCollection) updateWithFilter(this js.Value, args []js.Value) (js.
 }
 
 func (c *clientCollection) deleteWithFilter(this js.Value, args []js.Value) (js.Value, error) {
-	filter, err := stringArg(args, 0, "filter")
+	filter, err := utils.StringArg(args, 0, "filter")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 1, c.txns)
+	ctx, err := utils.ContextArg(args, 1, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -260,15 +260,15 @@ func (c *clientCollection) deleteWithFilter(this js.Value, args []js.Value) (js.
 }
 
 func (c *clientCollection) get(this js.Value, args []js.Value) (js.Value, error) {
-	docIDString, err := stringArg(args, 0, "docID")
+	docIDString, err := utils.StringArg(args, 0, "docID")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	showDeleted, err := boolArg(args, 1, "showDeleted")
+	showDeleted, err := utils.BoolArg(args, 1, "showDeleted")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 2, c.txns)
+	ctx, err := utils.ContextArg(args, 2, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -290,7 +290,7 @@ func (c *clientCollection) addIndex(this js.Value, args []js.Value) (js.Value, e
 	if err := structArg(args, 0, "request", &request); err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 1, c.txns)
+	ctx, err := utils.ContextArg(args, 1, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -308,7 +308,7 @@ func (c *clientCollection) deleteIndex(this js.Value, args []js.Value) (js.Value
 	if err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 1, c.txns)
+	ctx, err := utils.ContextArg(args, 1, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -334,10 +334,10 @@ func (c *clientCollection) listIndexes(this js.Value, args []js.Value) (js.Value
 
 func (c *clientCollection) addEncryptedIndex(this js.Value, args []js.Value) (js.Value, error) {
 	var request client.EncryptedIndexDescription
-	if err := structArg(args, 0, "request", &request); err != nil {
+	if err := utils.StructArg(args, 0, "request", &request); err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 1, c.txns)
+	ctx, err := utils.ContextArg(args, 1, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -351,11 +351,11 @@ func (c *clientCollection) addEncryptedIndex(this js.Value, args []js.Value) (js
 }
 
 func (c *clientCollection) deleteEncryptedIndex(this js.Value, args []js.Value) (js.Value, error) {
-	fieldName, err := stringArg(args, 0, "fieldName")
+	fieldName, err := utils.StringArg(args, 0, "fieldName")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 1, c.txns)
+	ctx, err := utils.ContextArg(args, 1, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -366,7 +366,7 @@ func (c *clientCollection) deleteEncryptedIndex(this js.Value, args []js.Value) 
 }
 
 func (c *clientCollection) listEncryptedIndexes(this js.Value, args []js.Value) (js.Value, error) {
-	ctx, err := contextArg(args, 0, c.txns)
+	ctx, err := utils.ContextArg(args, 0, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}

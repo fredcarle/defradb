@@ -616,7 +616,7 @@ func (p *P2P) SendUpdate(evt event.Update) error {
 				return NewErrPublishingToDocIDTopic(err, evt.Cid.String(), evt.DocID)
 			}
 		}
-
+		fmt.Println("push to collection")
 		if err := p.host.PublishToTopicAsync(p.ctx, evt.CollectionID, b); err != nil {
 			return NewErrPublishingToSchemaTopic(err, evt.Cid.String(), evt.CollectionID)
 		}

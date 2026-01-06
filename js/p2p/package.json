@@ -1,0 +1,69 @@
+{
+  "name": "@defradb/browser-p2p",
+  "version": "0.1.0",
+  "description": "Browser P2P networking for DefraDB using js-libp2p",
+  "type": "module",
+  "main": "./dist/browser-host.js",
+  "types": "./dist/browser-host.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/browser-host.js",
+      "types": "./dist/browser-host.d.ts"
+    },
+    "./example": {
+      "import": "./dist/example.js",
+      "types": "./dist/example.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint . --ext .ts",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@chainsafe/libp2p-noise": "^17.0.0",
+    "@chainsafe/libp2p-yamux": "^8.0.0",
+    "@helia/bitswap": "^3.0.10",
+    "@libp2p/bootstrap": "^12.0.0",
+    "@libp2p/circuit-relay-v2": "^4.0.0",
+    "@libp2p/crypto": "^5.0.0",
+    "@libp2p/gossipsub": "^15.0.0",
+    "@libp2p/identify": "^4.0.0",
+    "@libp2p/interface": "^3.1.0",
+    "@libp2p/kad-dht": "^16.0.0",
+    "@libp2p/ping": "^3.0.0",
+    "@libp2p/webrtc": "^6.0.0",
+    "@libp2p/websockets": "^10.0.0",
+    "@multiformats/multiaddr": "^13.0.0",
+    "helia": "^6.0.11",
+    "interface-blockstore": "^6.0.1",
+    "libp2p": "^3.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "esbuild": "^0.27.0",
+    "http-server": "^14.1.1",
+    "typescript": "^5.7.0"
+  },
+  "keywords": [
+    "defradb",
+    "p2p",
+    "libp2p",
+    "browser",
+    "webrtc",
+    "database",
+    "decentralized"
+  ],
+  "author": "Democratized Data Foundation",
+  "license": "BSL-1.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sourcenetwork/defradb.git",
+    "directory": "js/browser"
+  },
+  "bugs": {
+    "url": "https://github.com/sourcenetwork/defradb/issues"
+  },
+  "homepage": "https://github.com/sourcenetwork/defradb#readme"
+}

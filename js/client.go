@@ -66,6 +66,20 @@ func (c *Client) JSValue() js.Value {
 		"newConcurrentTxn":           goji.Async(c.newConcurrentTxn),
 		"verifySignature":            goji.Async(c.verifySignature),
 		"close":                      goji.Async(c.close),
+		// P2P methods
+		"getPeerInfo":               goji.Async(c.getPeerInfo),
+		"p2pConnect":                goji.Async(c.p2pConnect),
+		"p2pSetReplicator":          goji.Async(c.p2pSetReplicator),
+		"p2pDeleteReplicator":       goji.Async(c.p2pDeleteReplicator),
+		"p2pGetAllReplicators":      goji.Async(c.p2pGetAllReplicators),
+		"p2pAddCollections":         goji.Async(c.p2pAddCollections),
+		"p2pRemoveCollections":      goji.Async(c.p2pRemoveCollections),
+		"p2pGetAllCollections":      goji.Async(c.p2pGetAllCollections),
+		"p2pAddDocuments":           goji.Async(c.p2pAddDocuments),
+		"p2pRemoveDocuments":        goji.Async(c.p2pRemoveDocuments),
+		"p2pGetAllDocuments":        goji.Async(c.p2pGetAllDocuments),
+		"p2pSyncDocuments":          goji.Async(c.p2pSyncDocuments),
+		"p2pSyncCollectionVersions": goji.Async(c.p2pSyncCollectionVersions),
 	})
 }
 

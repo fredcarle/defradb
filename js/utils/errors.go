@@ -10,7 +10,7 @@
 
 //go:build js
 
-package js
+package utils
 
 import "github.com/sourcenetwork/defradb/errors"
 

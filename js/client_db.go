@@ -20,15 +20,16 @@ import (
 	acpTypes "github.com/sourcenetwork/defradb/acp/types"
 	"github.com/sourcenetwork/defradb/client/options"
 	"github.com/sourcenetwork/defradb/crypto"
+	"github.com/sourcenetwork/defradb/js/utils"
 	"github.com/sourcenetwork/goji"
 )
 
 func (c *Client) addDACPolicy(this js.Value, args []js.Value) (js.Value, error) {
-	policy, err := stringArg(args, 0, "policy")
+	policy, err := utils.StringArg(args, 0, "policy")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 1, c.txns)
+	ctx, err := utils.ContextArg(args, 1, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -42,23 +43,23 @@ func (c *Client) addDACPolicy(this js.Value, args []js.Value) (js.Value, error) 
 }
 
 func (c *Client) addDACActorRelationship(this js.Value, args []js.Value) (js.Value, error) {
-	collectionName, err := stringArg(args, 0, "collectionName")
+	collectionName, err := utils.StringArg(args, 0, "collectionName")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	docID, err := stringArg(args, 1, "docID")
+	docID, err := utils.StringArg(args, 1, "docID")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	relation, err := stringArg(args, 2, "relation")
+	relation, err := utils.StringArg(args, 2, "relation")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	targetActor, err := stringArg(args, 3, "targetActor")
+	targetActor, err := utils.StringArg(args, 3, "targetActor")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 4, c.txns)
+	ctx, err := utils.ContextArg(args, 4, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -72,23 +73,23 @@ func (c *Client) addDACActorRelationship(this js.Value, args []js.Value) (js.Val
 }
 
 func (c *Client) deleteDACActorRelationship(this js.Value, args []js.Value) (js.Value, error) {
-	collectionName, err := stringArg(args, 0, "collectionName")
+	collectionName, err := utils.StringArg(args, 0, "collectionName")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	docID, err := stringArg(args, 1, "docID")
+	docID, err := utils.StringArg(args, 1, "docID")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	relation, err := stringArg(args, 2, "relation")
+	relation, err := utils.StringArg(args, 2, "relation")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	targetActor, err := stringArg(args, 3, "targetActor")
+	targetActor, err := utils.StringArg(args, 3, "targetActor")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 4, c.txns)
+	ctx, err := utils.ContextArg(args, 4, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -102,27 +103,27 @@ func (c *Client) deleteDACActorRelationship(this js.Value, args []js.Value) (js.
 }
 
 func (c *Client) verifyDACAccess(this js.Value, args []js.Value) (js.Value, error) {
-	permission, err := stringArg(args, 0, "permission")
+	permission, err := utils.StringArg(args, 0, "permission")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	actorID, err := stringArg(args, 1, "actorID")
+	actorID, err := utils.StringArg(args, 1, "actorID")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	policyID, err := stringArg(args, 2, "policyID")
+	policyID, err := utils.StringArg(args, 2, "policyID")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	resourceName, err := stringArg(args, 3, "resourceName")
+	resourceName, err := utils.StringArg(args, 3, "resourceName")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	docID, err := stringArg(args, 4, "docID")
+	docID, err := utils.StringArg(args, 4, "docID")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 5, c.txns)
+	ctx, err := utils.ContextArg(args, 5, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -150,7 +151,7 @@ func (c *Client) verifyDACAccess(this js.Value, args []js.Value) (js.Value, erro
 }
 
 func (c *Client) getNACStatus(this js.Value, args []js.Value) (js.Value, error) {
-	ctx, err := contextArg(args, 0, c.txns)
+	ctx, err := utils.ContextArg(args, 0, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -164,7 +165,7 @@ func (c *Client) getNACStatus(this js.Value, args []js.Value) (js.Value, error) 
 }
 
 func (c *Client) reEnableNAC(this js.Value, args []js.Value) (js.Value, error) {
-	ctx, err := contextArg(args, 0, c.txns)
+	ctx, err := utils.ContextArg(args, 0, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -175,7 +176,7 @@ func (c *Client) reEnableNAC(this js.Value, args []js.Value) (js.Value, error) {
 }
 
 func (c *Client) disableNAC(this js.Value, args []js.Value) (js.Value, error) {
-	ctx, err := contextArg(args, 0, c.txns)
+	ctx, err := utils.ContextArg(args, 0, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -186,15 +187,15 @@ func (c *Client) disableNAC(this js.Value, args []js.Value) (js.Value, error) {
 }
 
 func (c *Client) addNACActorRelationship(this js.Value, args []js.Value) (js.Value, error) {
-	relation, err := stringArg(args, 0, "relation")
+	relation, err := utils.StringArg(args, 0, "relation")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	targetActor, err := stringArg(args, 1, "targetActor")
+	targetActor, err := utils.StringArg(args, 1, "targetActor")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 2, c.txns)
+	ctx, err := utils.ContextArg(args, 2, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -208,15 +209,15 @@ func (c *Client) addNACActorRelationship(this js.Value, args []js.Value) (js.Val
 }
 
 func (c *Client) deleteNACActorRelationship(this js.Value, args []js.Value) (js.Value, error) {
-	relation, err := stringArg(args, 0, "relation")
+	relation, err := utils.StringArg(args, 0, "relation")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	targetActor, err := stringArg(args, 1, "targetActor")
+	targetActor, err := utils.StringArg(args, 1, "targetActor")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 2, c.txns)
+	ctx, err := utils.ContextArg(args, 2, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -230,7 +231,7 @@ func (c *Client) deleteNACActorRelationship(this js.Value, args []js.Value) (js.
 }
 
 func (c *Client) getNodeIdentity(this js.Value, args []js.Value) (js.Value, error) {
-	ctx, err := contextArg(args, 0, c.txns)
+	ctx, err := utils.ContextArg(args, 0, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -242,7 +243,7 @@ func (c *Client) getNodeIdentity(this js.Value, args []js.Value) (js.Value, erro
 }
 
 func (c *Client) newTxn(this js.Value, args []js.Value) (js.Value, error) {
-	readOnly, err := boolArg(args, 0, "readOnly")
+	readOnly, err := utils.BoolArg(args, 0, "readOnly")
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -255,7 +256,7 @@ func (c *Client) newTxn(this js.Value, args []js.Value) (js.Value, error) {
 }
 
 func (c *Client) newConcurrentTxn(this js.Value, args []js.Value) (js.Value, error) {
-	readOnly, err := boolArg(args, 0, "readOnly")
+	readOnly, err := utils.BoolArg(args, 0, "readOnly")
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -268,19 +269,19 @@ func (c *Client) newConcurrentTxn(this js.Value, args []js.Value) (js.Value, err
 }
 
 func (c *Client) verifySignature(this js.Value, args []js.Value) (js.Value, error) {
-	pubKeyHex, err := stringArg(args, 0, "publicKey")
+	pubKeyHex, err := utils.StringArg(args, 0, "publicKey")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	pubKeyType, err := stringArg(args, 1, "publicKeyType")
+	pubKeyType, err := utils.StringArg(args, 1, "publicKeyType")
 	if pubKeyType == "" {
 		pubKeyType = string(crypto.KeyTypeSecp256k1)
 	}
-	blockCID, err := stringArg(args, 2, "blockCID")
+	blockCID, err := utils.StringArg(args, 2, "blockCID")
 	if err != nil {
 		return js.Undefined(), err
 	}
-	ctx, err := contextArg(args, 3, c.txns)
+	ctx, err := utils.ContextArg(args, 3, c.txns)
 	if err != nil {
 		return js.Undefined(), err
 	}

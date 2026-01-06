@@ -2,6 +2,8 @@ module github.com/sourcenetwork/defradb
 
 go 1.25.5
 
+replace github.com/sourcenetwork/go-p2p => ../go-p2p
+
 require (
 	github.com/bits-and-blooms/bitset v1.24.3
 	github.com/bxcodec/faker v2.0.1+incompatible
@@ -171,7 +173,6 @@ require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
 	github.com/cskr/pubsub v1.0.2 // indirect
 	github.com/danieljoos/wincred v1.2.2 // indirect
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/davidlazar/go-crypto v0.0.0-20200604182044-b73af7476f6c // indirect
 	github.com/desertbit/timer v1.0.1 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.3.0 // indirect

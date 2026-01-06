@@ -1,0 +1,22 @@
+{
+  "name": "@defradb/p2p-example",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Example demonstrating DefraDB P2P blockstore with Helia and js-libp2p",
+  "type": "module",
+  "scripts": {
+    "build:parent": "cd .. && npm run build",
+    "build": "esbuild example.ts --bundle --outfile=example.js --format=esm --platform=browser",
+    "serve": "http-server . -p 8080 -o",
+    "dev": "npm run build:parent && npm run build && npm run serve"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.0",
+    "http-server": "^14.1.1"
+  },
+  "author": "Democratized Data Foundation",
+  "license": "BSL-1.1",
+  "dependencies": {
+    "@sourcenetwork/acp-js": "^1.0.4"
+  }
+}

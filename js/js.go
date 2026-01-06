@@ -14,6 +14,7 @@ package js
 
 import (
 	"context"
+	"fmt"
 	"syscall/js"
 
 	"github.com/sourcenetwork/defradb/client/options"
@@ -38,7 +39,7 @@ func open(this js.Value, args []js.Value) (js.Value, error) {
 	if len(args) > 0 && args[0].Type() == js.TypeString {
 		acpType = args[0].String()
 	}
-	ident, err := initKeypairAndGetIdentity()
+	ident, err := utils.InitKeypairAndGetIdentity()
 	if err != nil {
 		return js.Undefined(), err
 	}
@@ -56,6 +57,7 @@ func open(this js.Value, args []js.Value) (js.Value, error) {
 		return js.Undefined(), err
 	}
 	if err := n.Start(context.Background()); err != nil {
+		fmt.Println("error on start", err)
 		return js.Undefined(), err
 	}
 	return NewClient(n).JSValue(), nil

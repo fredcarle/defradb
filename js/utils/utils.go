@@ -10,7 +10,7 @@
 
 //go:build js
 
-package js
+package utils
 
 import (
 	"context"
@@ -31,7 +31,7 @@ import (
 	iIdentity "github.com/sourcenetwork/defradb/internal/identity"
 )
 
-func stringArg(args []js.Value, index int, name string) (string, error) {
+func StringArg(args []js.Value, index int, name string) (string, error) {
 	if len(args) < index {
 		return "", fmt.Errorf("%s argument is required", name)
 	}
@@ -41,7 +41,7 @@ func stringArg(args []js.Value, index int, name string) (string, error) {
 	return args[index].String(), nil
 }
 
-func boolArg(args []js.Value, index int, name string) (bool, error) {
+func BoolArg(args []js.Value, index int, name string) (bool, error) {
 	if len(args) < index {
 		return false, fmt.Errorf("%s argument is required", name)
 	}
@@ -51,7 +51,7 @@ func boolArg(args []js.Value, index int, name string) (bool, error) {
 	return args[index].Bool(), nil
 }
 
-func intArg(args []js.Value, index int, name string) (int, error) {
+func IntArg(args []js.Value, index int, name string) (int, error) {
 	if len(args) < index {
 		return 0, fmt.Errorf("%s argument is required", name)
 	}
@@ -61,23 +61,36 @@ func intArg(args []js.Value, index int, name string) (int, error) {
 	return args[index].Int(), nil
 }
 
-func structArg(args []js.Value, index int, name string, out any) error {
+func Uint8ArrayArg(args []js.Value, index int, name string) ([]byte, error) {
+	if len(args) <= index {
+		return nil, fmt.Errorf("%s argument is required", name)
+	}
+	jsVal := args[index]
+	if !jsVal.InstanceOf(js.Global().Get("Uint8Array")) {
+		return nil, fmt.Errorf("%s argument must be a Uint8Array", name)
+	}
+	data := make([]byte, jsVal.Length())
+	js.CopyBytesToGo(data, jsVal)
+	return data, nil
+}
+
+func StructArg(args []js.Value, index int, name string, out any) error {
 	if len(args) < index {
 		return fmt.Errorf("%s argument is required", name)
 	}
 	return goji.UnmarshalJS(args[index], out)
 }
 
-func contextArg(args []js.Value, index int, txns *sync.Map) (context.Context, error) {
+func ContextArg(args []js.Value, index int, txns *sync.Map) (context.Context, error) {
 	ctx := context.Background()
-	if index >= len(args) {
+	if index >= len(args) || args[index].IsUndefined() || args[index].IsNull() {
 		return ctx, nil
 	}
-	identity, err := contextIdentityArg(args[index])
+	identity, err := ContextIdentityArg(args[index])
 	if err != nil {
 		return ctx, err
 	}
-	txn, err := contextTransactionArg(args[index], txns)
+	txn, err := ContextTransactionArg(args[index], txns)
 	if err != nil {
 		return ctx, err
 	}
@@ -86,7 +99,7 @@ func contextArg(args []js.Value, index int, txns *sync.Map) (context.Context, er
 	return ctx, nil
 }
 
-func contextTransactionArg(value js.Value, txns *sync.Map) (client.Txn, error) {
+func ContextTransactionArg(value js.Value, txns *sync.Map) (client.Txn, error) {
 	id := value.Get("transaction")
 	if id.Type() != js.TypeNumber {
 		return nil, nil
@@ -98,7 +111,7 @@ func contextTransactionArg(value js.Value, txns *sync.Map) (client.Txn, error) {
 	return txn.(client.Txn), nil //nolint:forcetypeassert
 }
 
-func contextIdentityArg(value js.Value) (immutable.Option[acpIdentity.Identity], error) {
+func ContextIdentityArg(value js.Value) (immutable.Option[acpIdentity.Identity], error) {
 	full_ident := value.Get("full_identity")
 	if full_ident.Type() == js.TypeString {
 		data, err := hex.DecodeString(full_ident.String())
