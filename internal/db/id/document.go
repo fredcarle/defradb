@@ -143,6 +143,11 @@ func SetBlockDocIDMapping(
 	)
 }
 
+func GetDocIDsForBlock(ctx context.Context, blockCID cid.Cid) ([]string, error) {
+	txn := datastore.CtxMustGetTxn(ctx)
+	return GetDocIDsForBlockFromStore(ctx, txn.Systemstore(), blockCID)
+}
+
 func GetDocIDsForBlockFromStore(
 	ctx context.Context,
 	store corekv.Reader,

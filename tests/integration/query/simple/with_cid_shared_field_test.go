@@ -20,12 +20,11 @@ import (
 )
 
 // Two documents with the same "Name" value share one genesis "Name" field block, so its CID is
-// owned by both documents. A time-travel query addresses a single document version, so a shared
-// field block CID is not a valid target: it cannot identify one document and the query errors
-// rather than reconstructing an arbitrary owner's state.
-func TestQuerySimple_WithSharedFieldCid_Errors(t *testing.T) {
+// owned by both documents. A time-travel query against that shared CID returns every owning
+// document's state at that version - not an error, and not just one arbitrary owner.
+func TestQuerySimple_WithSharedFieldCid_ReturnsAllOwners(t *testing.T) {
 	test := testUtils.TestCase{
-		// hardcoded/templated CIDs would change under encryption or signing.
+		// templated CIDs would change under encryption or signing.
 		MultiplierExcludes: []string{multiplier.EncryptedDocs, multiplier.SignedDocs},
 		Actions: []any{
 			&action.AddDoc{
@@ -43,10 +42,17 @@ func TestQuerySimple_WithSharedFieldCid_Errors(t *testing.T) {
 			&action.Request{
 				Request: `query {
 					Users (cid: "{{.FieldCID0_0_Name_0}}") {
+						_docID
 						Name
 					}
 				}`,
-				ExpectedError: "malformed document ID",
+				Results: map[string]any{
+					"Users": []map[string]any{
+						{"_docID": testUtils.NewDocIndex(0, 0), "Name": "Shared"},
+						{"_docID": testUtils.NewDocIndex(0, 1), "Name": "Shared"},
+					},
+				},
+				NonOrderedResults: true,
 			},
 		},
 	}
