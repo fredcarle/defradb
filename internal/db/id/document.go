@@ -182,21 +182,6 @@ func GetDocIDsForBlockFromStore(
 	return docIDs, nil
 }
 
-func GetDocIDForBlockFromStore(
-	ctx context.Context,
-	store corekv.Reader,
-	blockCID cid.Cid,
-) (string, bool, error) {
-	docIDs, err := GetDocIDsForBlockFromStore(ctx, store, blockCID)
-	if err != nil {
-		return "", false, err
-	}
-	if len(docIDs) == 0 {
-		return "", false, nil
-	}
-	return docIDs[0], true, nil
-}
-
 func DeleteBlockDocIDMapping(
 	ctx context.Context,
 	store corekv.ReaderWriter,
