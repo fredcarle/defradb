@@ -13,8 +13,13 @@ package message
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"testing"
 	"time"
+
+	"github.com/fxamacker/cbor/v2"
+	"github.com/libp2p/go-libp2p/core/crypto"
+	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/sourcenetwork/defradb/client"
 
@@ -107,4 +112,73 @@ func TestSend_LateReplyAfterTimeoutMustNotPanic(t *testing.T) {
 	require.ErrorIs(t, err, ErrResponseTimeout)
 
 	require.NotPanics(t, func() { proto.ch <- &MetaData{} })
+}
+
+// signingHost is a host backed by a real key pair, so messages it signs pass
+// verifyMessage on the Receive side.
+type signingHost struct {
+	client.Host
+	priv crypto.PrivKey
+	id   peer.ID
+}
+
+func newSigningHost(t *testing.T) *signingHost {
+	priv, pub, err := crypto.GenerateEd25519Key(rand.Reader)
+	require.NoError(t, err)
+	id, err := peer.IDFromPublicKey(pub)
+	require.NoError(t, err)
+	return &signingHost{priv: priv, id: id}
+}
+
+func (h *signingHost) ID() string { return h.id.String() }
+func (h *signingHost) Pubkey() ([]byte, error) {
+	return crypto.MarshalPublicKey(h.priv.GetPublic())
+}
+func (h *signingHost) Sign(b []byte) ([]byte, error) { return h.priv.Sign(b) }
+
+// occupiedProto stands in for the window between an inbound handler reading the
+// response channel out of the map (message.go:127) and the owner of that
+// channel calling DeleteResponseChan: the channel is still registered and
+// already holds the one reply it is buffered for.
+type occupiedProto struct {
+	host client.Host
+	ch   chan Message
+}
+
+func (p *occupiedProto) Host() client.Host                           { return p.host }
+func (p *occupiedProto) SetResponseChan(string, chan Message)        {}
+func (p *occupiedProto) DeleteResponseChan(string)                   {}
+func (p *occupiedProto) GetResponseChan(string) (chan Message, bool) { return p.ch, true }
+
+// A second reply carrying an already-seen message ID must not wedge the handler
+// goroutine. The response channel is buffered at one, so the unconditional
+// `messageChan <- m` blocks forever on the second delivery, and because
+// `defer closer.Close()` only runs when Receive returns, the stream is never
+// closed either - reinstating the per-(protocol, peer) reservation leak this
+// change exists to fix.
+func TestReceive_DuplicateReplyMustNotBlockTheHandler(t *testing.T) {
+	host := newSigningHost(t)
+
+	m := &MetaData{}
+	require.NoError(t, signAndSetMetaData(host, m))
+	b, err := cbor.Marshal(m)
+	require.NoError(t, err)
+
+	// The channel Send registered, already holding the first reply.
+	ch := make(chan Message, 1)
+	ch <- &MetaData{}
+
+	stream := &closeRecordingStream{Reader: bytes.NewReader(b)}
+	done := make(chan error, 1)
+	go func() {
+		done <- Receive(stream, host.ID(), &occupiedProto{host: host, ch: ch}, &MetaData{})
+	}()
+
+	select {
+	case err := <-done:
+		require.NoError(t, err)
+	case <-time.After(time.Second):
+		require.Fail(t, "Receive blocked on a full response channel",
+			"the handler goroutine is wedged and the stream is still open (closed=%v)", stream.closed)
+	}
 }
