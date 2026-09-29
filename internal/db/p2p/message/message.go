@@ -126,7 +126,13 @@ func Receive(stream io.Reader, peerID string, proto proto, m Message) error {
 
 	messageChan, ok := proto.GetResponseChan(m.GetMessageID())
 	if ok {
-		messageChan <- m
+		// Never block the handler: the channel only has room for the one reply
+		// Send is waiting on. A duplicate or racing reply for the same message ID
+		// is dropped rather than wedging this goroutine and leaking the stream.
+		select {
+		case messageChan <- m:
+		default:
+		}
 		proto.DeleteResponseChan(m.GetMessageID())
 	}
 
